@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_2_0.xsd" version="2.0">
+
+    <named-query name="Dataseries.deleteSeriesByID">
+        <query>DELETE FROM Dataseries d where d.dataseriesPK.seriesid = :seriesid</query>
+    </named-query>
+    <named-query name="Dataseries.dataSeriesByID">
+        <query>SELECT d FROM Dataseries d where d.dataseriesPK.seriesid = :seriesid</query>
+    </named-query>
+
+    <named-query name="Dataseries.dataSeriesYvalByID">
+        <query>SELECT d.yvaluePos FROM Dataseries d where d.dataseriesPK.seriesid = :seriesid</query>
+    </named-query>
+    <named-query name="Dataseries.updatePosY">
+        <query>UPDATE Dataseries d SET d.yvaluePos = d.yvalue + :minY, d.xvaluePos = d.xvalue + :minX where d.dataseriesPK.seriesid = :seriesid</query>
+    </named-query>
+    <named-query name="Dataseries.minY">
+        <query>SELECT min(d.yvalue) FROM Dataseries d where d.dataseriesPK.seriesid = :seriesid</query>
+    </named-query>
+    <named-query name="Dataseries.minX">
+        <query>SELECT min(d.xvalue) FROM Dataseries d where d.dataseriesPK.seriesid = :seriesid</query>
+    </named-query>
+    <named-query name="Dataseries.count">
+        <query>SELECT count(d.xvalue) FROM Dataseries d where d.dataseriesPK.seriesid = :seriesid</query>
+    </named-query>
+    <named-query name="Dataseries.findMean">
+        <query>SELECT AVG(d.yvalue) FROM Dataseries d where d.dataseriesPK.seriesid = :seriesid</query>
+    </named-query>
+    <named-query name="Dataseries.subtractYMean">
+        <query>UPDATE Dataseries d SET d.ycumulative = d.yvalue - :meanY where d.dataseriesPK.seriesid = :seriesid</query>
+    </named-query>
+    <named-query name="Dataseries.cumulateYMean">
+        <query>UPDATE Dataseries d SET d.ycumulative = :cumulateY where d.dataseriesPK.seriesid = :seriesid and d.dataseriesPK.dataindex = :dataindex</query>
+    </named-query>
+</entity-mappings>
