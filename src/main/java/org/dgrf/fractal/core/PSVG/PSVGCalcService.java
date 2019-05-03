@@ -121,16 +121,16 @@ public class PSVGCalcService {
         //write VG in file.
         //open temp VG in file.
         PSVGGraphStore.psvgresultsslug = psvgResultsTermInstanceSlug;
-        PSVGGraphStore.createVisibilityGraphFile();
+        
         //initialise VG Calculation
         VisibilityDegree visDegree = new VisibilityDegree(InputTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, rejectCut, logBase);
         visDegree.calculateVisibilityDegree();
         //close  temp VG in file.
-        PSVGGraphStore.closeVisibilityGraphFile();
+        
         //store the Graph in table as adjacency list
-        PSVGGraphStore.storeVisibilityGraphInDB(DatabaseConnection.EMF);
+        
         //delete temp VG in file.
-        PSVGGraphStore.delVisibilityGraphFile();
+        
         PSVGDetailsList = visDegree.getPSVGList();
         PSVGIntercept = visDegree.getPSVGIntercept();
         PSVGFractalDimension = visDegree.getPSVGFractalDimension();

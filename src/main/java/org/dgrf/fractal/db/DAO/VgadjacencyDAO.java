@@ -5,6 +5,11 @@
  */
 package org.dgrf.fractal.db.DAO;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
@@ -57,4 +62,59 @@ public class VgadjacencyDAO extends VgadjacencyJpaController {
         entr.commit();
         return response;
     }
+    
+    public Map<Integer,Integer> getDegreesOfnodes() {
+        
+        String nativeQueryString = "select nodenum,sum(degree) as d from \n" +
+                    "(select node as nodenum, count(adjnode) as degree from vgadjacency group by node union all\n" +
+                    "select adjnode as nodenum, count(node) as degree from vgadjacency group by adjnode  order by nodenum ) a group by nodenum";
+        EntityManager em = getEntityManager();
+        
+        Query query = em.createNativeQuery(nativeQueryString);
+        
+        List<Object[]> nodesAndDegrees = query.getResultList();
+        Map<Integer,Integer> nodesAndDegreeMap = new HashMap<>();
+        for (Object[] nodesAndDegree:nodesAndDegrees ) {
+            
+            
+            Number nodeNumNum = (Number)nodesAndDegree[0];
+            Number degreeOfNodeNum = (Number)nodesAndDegree[1];
+            Integer nodeNum = nodeNumNum.intValue();
+            Integer degreeOfNode = degreeOfNodeNum.intValue();
+            nodesAndDegreeMap.put(nodeNum, degreeOfNode);
+            
+        }
+        
+        return nodesAndDegreeMap;
+        
+        
+    }
+
+    public Map<Integer,Integer> getNodeCountsforDegree() {
+        
+        String nativeQueryString = "select d as degreeval,count(nodenum) as nodeswithdegval from\n" +
+"(select nodenum,sum(degree) as d from \n" +
+"(select node as nodenum, count(adjnode) as degree from vgadjacency group by node union all\n" +
+"select adjnode as nodenum, count(node) as degree from vgadjacency group by adjnode  order by nodenum ) a group by a.nodenum) b group by b.d order by b.d";
+        EntityManager em = getEntityManager();
+        
+        Query query = em.createNativeQuery(nativeQueryString);
+        
+        List<Object[]> nodesAndDegrees = query.getResultList();
+        Map<Integer,Integer> nodesAndDegreeMap = new HashMap<>();
+        for (Object[] nodesAndDegree:nodesAndDegrees ) {
+            
+            
+            Number nodeNumNum = (Number)nodesAndDegree[0];
+            Number degreeOfNodeNum = (Number)nodesAndDegree[1];
+            Integer nodeNum = nodeNumNum.intValue();
+            Integer degreeOfNode = degreeOfNodeNum.intValue();
+            nodesAndDegreeMap.put(nodeNum, degreeOfNode);
+            
+        }
+        
+        return nodesAndDegreeMap;
+        
+        
+    }    
 }

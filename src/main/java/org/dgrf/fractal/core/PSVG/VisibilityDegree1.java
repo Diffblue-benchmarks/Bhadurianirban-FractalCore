@@ -2,20 +2,17 @@ package org.dgrf.fractal.core.PSVG;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.dgrf.cms.core.client.TermInstanceClient;
-import org.dgrf.fractal.core.util.DatabaseConnection;
 import org.dgrf.fractal.core.util.LogUtil;
-import org.dgrf.fractal.db.DAO.VgadjacencyDAO;
 
-public class VisibilityDegree {
+public class VisibilityDegree1 {
 
     private List<Double> InputTimeSeries;
-    //private ArrayList<Integer> visibilityOrder;
+    private ArrayList<Integer> visibilityOrder;
     private ArrayList<PSVGDetails> PSVGList;
     private int PSVGRequiredStart;
     private double PSVGDataPartFromStart;
@@ -31,7 +28,7 @@ public class VisibilityDegree {
     private int maxNodesForCalc;
     
 
-    public VisibilityDegree(List<Double> InputTimeSeries, int PSVGRequiredStart, double PSVGDataPartFromStart,
+    public VisibilityDegree1(List<Double> InputTimeSeries, int PSVGRequiredStart, double PSVGDataPartFromStart,
             boolean includePSVGInterCept, int maxNodesForCalc, Double rejectCut,double logBase) {
         this.InputTimeSeries = InputTimeSeries;
         this.PSVGRequiredStart = PSVGRequiredStart;
@@ -56,12 +53,9 @@ public class VisibilityDegree {
     }
 
     public void calculateVisibilityDegree() {
-        PSVGGraphStore.createVisibilityGraphFile();
         initializeDegree(InputTimeSeries);
         iterateAndCalcDegree(InputTimeSeries);
-        PSVGGraphStore.closeVisibilityGraphFile();
-        PSVGGraphStore.storeVisibilityGraphInDB(DatabaseConnection.EMF);
-        PSVGGraphStore.delVisibilityGraphFile();
+
         calcPSVGList();
         markPSVGoutliers(PSVGRequiredStart, PSVGDataPartFromStart);
 
@@ -74,14 +68,14 @@ public class VisibilityDegree {
 
     public void printPSVGListToConsole() {
         PSVGDetails PSVGDet = new PSVGDetails();
-        Logger.getLogger(VisibilityDegree.class.getName()).log(Level.INFO,"k P(k) log(p(k)) log(1/k)" );
+        Logger.getLogger(VisibilityDegree1.class.getName()).log(Level.INFO,"k P(k) log(p(k)) log(1/k)" );
         
         for (int i = 0; i < PSVGList.size(); i++) {
             PSVGDet = PSVGList.get(i);
-            Logger.getLogger(VisibilityDegree.class.getName()).log(Level.INFO, "{0} {1} {2} {3}", new Object[]{PSVGDet.getDegValue(), PSVGDet.getProbOfDegVal(), PSVGDet.getlogOfProbOfDegVal(), PSVGDet.getLogOfDegVal()});
+            Logger.getLogger(VisibilityDegree1.class.getName()).log(Level.INFO, "{0} {1} {2} {3}", new Object[]{PSVGDet.getDegValue(), PSVGDet.getProbOfDegVal(), PSVGDet.getlogOfProbOfDegVal(), PSVGDet.getLogOfDegVal()});
             
         }
-        Logger.getLogger(VisibilityDegree.class.getName()).log(Level.INFO, "PSVG{0}x + {1}", new Object[]{PSVGFractalDimension, PSVGIntercept});
+        Logger.getLogger(VisibilityDegree1.class.getName()).log(Level.INFO, "PSVG{0}x + {1}", new Object[]{PSVGFractalDimension, PSVGIntercept});
         
     }
 
@@ -100,20 +94,21 @@ public class VisibilityDegree {
 		 * arraylist is initialised with 2. But for the nodes at the two terminals
 		 * only one node is visible by default they are set to 1. 
          */
-        
+        visibilityOrder = new ArrayList<Integer>();
         for (int i = 0; i < InputTimeSeries.size(); i++) {
-        
+            visibilityOrder.add(2);
             PSVGGraphStore.storeVisibilityGraphInFile(i, i+1);
         }
         
-        
+        visibilityOrder.set(0, 1);
+        visibilityOrder.set(InputTimeSeries.size() - 1, 1);
     }
 
     public void iterateAndCalcDegree(List<Double> InputTimeSeries) {
         int nodeGap;
-        int totalNodes = InputTimeSeries.size();
-        if (InputTimeSeries.size() < maxNodesForCalc) {
-            maxNodesForCalc = InputTimeSeries.size();
+        int totalNodes = visibilityOrder.size();
+        if (visibilityOrder.size() < maxNodesForCalc) {
+            maxNodesForCalc = visibilityOrder.size();
         }
         int currentNode;
         Double tempCurrentNode = 0.0;
@@ -152,7 +147,8 @@ public class VisibilityDegree {
                     }
                 }
                 if (isVisible) {
-                    
+                    visibilityOrder.set(currentNode, (visibilityOrder.get(currentNode) + 1));
+                    visibilityOrder.set(currNodePlusGap, (visibilityOrder.get(currNodePlusGap) + 1));
                     PSVGGraphStore.storeVisibilityGraphInFile(currentNode, currNodePlusGap);
                 }
             }
@@ -166,20 +162,17 @@ public class VisibilityDegree {
         int degreeVal;
         int degreeValCount;
         int visibilityOrderIterator;
-        VgadjacencyDAO vgadjacencyDAO = new VgadjacencyDAO(DatabaseConnection.EMF);
-        Map<Integer,Integer> nodesAndDegreeMap = vgadjacencyDAO.getDegreesOfnodes();
-        int totalNodes = nodesAndDegreeMap.size();
-        if (nodesAndDegreeMap.size() < maxNodesForCalc) {
-            maxNodesForCalc = nodesAndDegreeMap.size();
+        int totalNodes = visibilityOrder.size();
+        if (visibilityOrder.size() < maxNodesForCalc) {
+            maxNodesForCalc = visibilityOrder.size();
         }
         int maxNodesOnBothSides = maxNodesForCalc * 2;
         float probOfDegVal;
         PSVGDetails PSVGDet;
-        
         for (degreeVal = 0; degreeVal < maxNodesOnBothSides; degreeVal++) {
             degreeValCount = 0;
             for (visibilityOrderIterator = 0; visibilityOrderIterator < totalNodes; visibilityOrderIterator++) {
-                if (degreeVal == nodesAndDegreeMap.get(visibilityOrderIterator)) {
+                if (degreeVal == visibilityOrder.get(visibilityOrderIterator)) {
                     degreeValCount++;
                 }
             }
@@ -262,7 +255,7 @@ public class VisibilityDegree {
         }
 
         if (listSize < 3) {
-            Logger.getLogger(VisibilityDegree.class.getName()).log(Level.SEVERE,"Chi square could not be calculated" );
+            Logger.getLogger(VisibilityDegree1.class.getName()).log(Level.SEVERE,"Chi square could not be calculated" );
             
             PSVGChiSquareVal = 999.0;
         }
