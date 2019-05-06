@@ -33,10 +33,9 @@ public class VisibilityDegree {
     private boolean includePSVGInterCept;
     private int maxNodesForCalc;
     private String psvgResultsTermInstanceSlug;
-    
 
     public VisibilityDegree(List<Double> InputTimeSeries, int PSVGRequiredStart, double PSVGDataPartFromStart,
-            boolean includePSVGInterCept, int maxNodesForCalc, Double rejectCut,double logBase,String psvgResultsTermInstanceSlug) {
+            boolean includePSVGInterCept, int maxNodesForCalc, Double rejectCut, double logBase, String psvgResultsTermInstanceSlug) {
         this.InputTimeSeries = InputTimeSeries;
         this.PSVGRequiredStart = PSVGRequiredStart;
         this.PSVGDataPartFromStart = PSVGDataPartFromStart;
@@ -61,9 +60,9 @@ public class VisibilityDegree {
     }
 
     public void calculateVisibilityDegree() {
-        
-            PSVGGraphStore.createVisibilityGraphFile();
-        
+
+        PSVGGraphStore.createVisibilityGraphFile();
+
         PSVGGraphStore.psvgresultsslug = psvgResultsTermInstanceSlug;
         initializeDegree(InputTimeSeries);
         iterateAndCalcDegree(InputTimeSeries);
@@ -96,7 +95,6 @@ public class VisibilityDegree {
 //        Logger.getLogger(VisibilityDegree.class.getName()).log(Level.INFO, "PSVG{0}x + {1}", new Object[]{PSVGFractalDimension, PSVGIntercept});
 //        
 //    }
-
     public void setPSVGFractalDimension() {
 
         PSVGIntercept = PSVGRegSet.getIntercept();
@@ -112,13 +110,52 @@ public class VisibilityDegree {
 		 * arraylist is initialised with 2. But for the nodes at the two terminals
 		 * only one node is visible by default they are set to 1. 
          */
-        
+
         for (int i = 0; i < InputTimeSeries.size(); i++) {
-        
-            PSVGGraphStore.storeVisibilityGraphInFile(i, i+1);
+
+            PSVGGraphStore.storeVisibilityGraphInFile(i, i + 1);
         }
-        
-        
+
+    }
+
+    public void createVGEdges() {
+        int totalNodes = InputTimeSeries.size();
+        if (InputTimeSeries.size() < maxNodesForCalc) {
+            maxNodesForCalc = InputTimeSeries.size();
+        }
+
+        for (int nodeGap = 1; nodeGap < maxNodesForCalc; nodeGap++) {
+            for (int currentNodeIndex = 0; currentNodeIndex < (totalNodes - nodeGap); currentNodeIndex++) {
+                int nodeToCompareIndex = currentNodeIndex + nodeGap;
+
+                if (nodeGap == 1) {
+                    PSVGGraphStore.storeVisibilityGraphInFile(currentNodeIndex, nodeToCompareIndex);
+                } else {
+                    Boolean isVisible = checkVisibility(currentNodeIndex, nodeToCompareIndex);
+                }
+            }
+        }
+    }
+
+    private Boolean checkVisibility(int currentNodeIndex, int nodeToCompareIndex) {
+
+        Double currentNodeXVal = Double.valueOf(currentNodeIndex);
+        Double currentNodeYVal = InputTimeSeries.get(currentNodeIndex);
+
+        Double nodeToCompareXVal = Double.valueOf(nodeToCompareIndex);
+        Double nodeToCompareYVal = InputTimeSeries.get(nodeToCompareIndex);
+        List<Double> seriesInBetween  = InputTimeSeries.subList(currentNodeIndex+1,nodeToCompareIndex-1);
+        for (int i=0;i<seriesInBetween.size();i++) {
+            Double inBetweenNodeXVal = Double.valueOf(i);
+            Double inBetweenNodeYVal = seriesInBetween.get(i);
+            
+            Double baseRatio = (inBetweenNodeXVal-currentNodeXVal)/(nodeToCompareXVal-currentNodeXVal);
+            Double inBetweenHeight = (baseRatio*(nodeToCompareYVal-currentNodeYVal))+currentNodeYVal;
+            if (inBetweenNodeYVal >= inBetweenHeight) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void iterateAndCalcDegree(List<Double> InputTimeSeries) {
@@ -138,8 +175,7 @@ public class VisibilityDegree {
         Double nodeSlope = 0.0;
         Double nodeToNodeDiff = 0.0;
         boolean isVisible = false;
-        
-        
+
         for (nodeGap = 2; nodeGap < maxNodesForCalc; nodeGap++) {
             for (currentNode = 0; currentNode < (totalNodes - nodeGap); currentNode++) {
                 currNodePlusGap = currentNode + nodeGap;
@@ -154,7 +190,6 @@ public class VisibilityDegree {
                     nodeToNodeDiff = InputTimeSeries.get(currentNode) - InputTimeSeries.get(currNodePlusGap);
                     comparedNodeValue = InputTimeSeries.get(currNodePlusGap) + nodeSlope * nodeToNodeDiff;
 
-
                     if (InputTimeSeries.get(nodeToCompare) < comparedNodeValue) {
 
                         isVisible = true;
@@ -164,32 +199,30 @@ public class VisibilityDegree {
                     }
                 }
                 if (isVisible) {
-                    
+
                     PSVGGraphStore.storeVisibilityGraphInFile(currentNode, currNodePlusGap);
                 }
             }
 
         }
-        
+
     }
 
     public void calcPSVGList() {
 
-       
-        
         VgadjacencyDAO vgadjacencyDAO = new VgadjacencyDAO(DatabaseConnection.EMF);
-        Map<Integer,Integer> nodesAndDegreeMap = vgadjacencyDAO.getDegreesOfnodes(psvgResultsTermInstanceSlug);
+        Map<Integer, Integer> nodesAndDegreeMap = vgadjacencyDAO.getDegreesOfnodes(psvgResultsTermInstanceSlug);
         int totalNodes = nodesAndDegreeMap.size();
-        PSVGList = nodesAndDegreeMap.entrySet().stream().filter(nd->nd.getValue() > 0).map(nd->{
-                PSVGDetails PSVGDet = new PSVGDetails();
-                int degreeVal = nd.getKey();
-                int degreeValCount = nd.getValue();
-                PSVGDet.setDegValue(degreeVal);
-                PSVGDet.setNumOfNodesWithDegVal(degreeValCount);
-                float probOfDegVal = (float) degreeValCount / totalNodes;
-                PSVGDet.setProbOfDegVal(probOfDegVal);
-                PSVGDet.setIsRequired(true);
-                return PSVGDet;
+        PSVGList = nodesAndDegreeMap.entrySet().stream().filter(nd -> nd.getValue() > 0).map(nd -> {
+            PSVGDetails PSVGDet = new PSVGDetails();
+            int degreeVal = nd.getKey();
+            int degreeValCount = nd.getValue();
+            PSVGDet.setDegValue(degreeVal);
+            PSVGDet.setNumOfNodesWithDegVal(degreeValCount);
+            float probOfDegVal = (float) degreeValCount / totalNodes;
+            PSVGDet.setProbOfDegVal(probOfDegVal);
+            PSVGDet.setIsRequired(true);
+            return PSVGDet;
         }).collect(Collectors.toList());
 
     }
@@ -243,7 +276,7 @@ public class VisibilityDegree {
         Double absExpectLogOfProbOfDegVal = 0.0;
         Double squaredDiffDivExpected = 0.0;
         Double sumOfSquaredDiffDivExpected = 0.0;
-        
+
         for (int i = 0; i < PSVGList.size(); i++) {
 
             expectLogOfProbOfDegVal = PSVGRegSet.predict(PSVGList.get(i).getLogOfDegVal());
@@ -251,7 +284,6 @@ public class VisibilityDegree {
             absExpectLogOfProbOfDegVal = Math.abs(expectLogOfProbOfDegVal);
             diffExpectedActual = Math.abs(expectLogOfProbOfDegVal - actualLogOfProbOfDegVal);
 
-        
             if (diffExpectedActual <= rejectCut) {
                 squaredDiffDivExpected = (diffExpectedActual * diffExpectedActual) / absExpectLogOfProbOfDegVal;
 
@@ -261,8 +293,8 @@ public class VisibilityDegree {
         }
 
         if (listSize < 3) {
-            Logger.getLogger(VisibilityDegree.class.getName()).log(Level.SEVERE,"Chi square could not be calculated" );
-            
+            Logger.getLogger(VisibilityDegree.class.getName()).log(Level.SEVERE, "Chi square could not be calculated");
+
             PSVGChiSquareVal = 999.0;
         }
         int degFreedom = listSize - 2;//2 is because there are expected and actual is for 2
