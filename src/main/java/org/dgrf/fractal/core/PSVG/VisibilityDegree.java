@@ -5,9 +5,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.dgrf.cms.core.client.TermInstanceClient;
+import org.dgrf.fractal.constants.FractalConstants;
 import org.dgrf.fractal.core.util.DatabaseConnection;
 import org.dgrf.fractal.core.util.LogUtil;
 import org.dgrf.fractal.db.DAO.VgadjacencyDAO;
@@ -16,7 +19,7 @@ public class VisibilityDegree {
 
     private List<Double> InputTimeSeries;
     //private ArrayList<Integer> visibilityOrder;
-    private ArrayList<PSVGDetails> PSVGList;
+    private List<PSVGDetails> PSVGList;
     private int PSVGRequiredStart;
     private double PSVGDataPartFromStart;
     private double PSVGIntercept;
@@ -29,10 +32,11 @@ public class VisibilityDegree {
     private SimpleRegression PSVGRegSet;
     private boolean includePSVGInterCept;
     private int maxNodesForCalc;
+    private String psvgResultsTermInstanceSlug;
     
 
     public VisibilityDegree(List<Double> InputTimeSeries, int PSVGRequiredStart, double PSVGDataPartFromStart,
-            boolean includePSVGInterCept, int maxNodesForCalc, Double rejectCut,double logBase) {
+            boolean includePSVGInterCept, int maxNodesForCalc, Double rejectCut,double logBase,String psvgResultsTermInstanceSlug) {
         this.InputTimeSeries = InputTimeSeries;
         this.PSVGRequiredStart = PSVGRequiredStart;
         this.PSVGDataPartFromStart = PSVGDataPartFromStart;
@@ -40,10 +44,11 @@ public class VisibilityDegree {
         this.maxNodesForCalc = maxNodesForCalc;
         this.rejectCut = rejectCut;
         LogUtil.setLogBase(logBase);
+        this.psvgResultsTermInstanceSlug = psvgResultsTermInstanceSlug;
 
     }
 
-    public ArrayList<PSVGDetails> getPSVGList() {
+    public List<PSVGDetails> getPSVGList() {
         return PSVGList;
     }
 
@@ -56,7 +61,10 @@ public class VisibilityDegree {
     }
 
     public void calculateVisibilityDegree() {
-        PSVGGraphStore.createVisibilityGraphFile();
+        
+            PSVGGraphStore.createVisibilityGraphFile();
+        
+        PSVGGraphStore.psvgresultsslug = psvgResultsTermInstanceSlug;
         initializeDegree(InputTimeSeries);
         iterateAndCalcDegree(InputTimeSeries);
         PSVGGraphStore.closeVisibilityGraphFile();
@@ -69,21 +77,25 @@ public class VisibilityDegree {
         if (rejectCut > 0.0) {
             calcPSVGChiSquareVal();
         }
-
-    }
-
-    public void printPSVGListToConsole() {
-        PSVGDetails PSVGDet = new PSVGDetails();
-        Logger.getLogger(VisibilityDegree.class.getName()).log(Level.INFO,"k P(k) log(p(k)) log(1/k)" );
-        
-        for (int i = 0; i < PSVGList.size(); i++) {
-            PSVGDet = PSVGList.get(i);
-            Logger.getLogger(VisibilityDegree.class.getName()).log(Level.INFO, "{0} {1} {2} {3}", new Object[]{PSVGDet.getDegValue(), PSVGDet.getProbOfDegVal(), PSVGDet.getlogOfProbOfDegVal(), PSVGDet.getLogOfDegVal()});
-            
+        if (!psvgResultsTermInstanceSlug.contains(FractalConstants.TERM_INSTANCE_SLUG_IPSVG_EXT)) {
+            VgadjacencyDAO vgadjacencyDAO = new VgadjacencyDAO(DatabaseConnection.EMF);
+            vgadjacencyDAO.deleteVisibilityGraph(psvgResultsTermInstanceSlug);
         }
-        Logger.getLogger(VisibilityDegree.class.getName()).log(Level.INFO, "PSVG{0}x + {1}", new Object[]{PSVGFractalDimension, PSVGIntercept});
-        
+
     }
+
+//    public void printPSVGListToConsole() {
+//        PSVGDetails PSVGDet = new PSVGDetails();
+//        Logger.getLogger(VisibilityDegree.class.getName()).log(Level.INFO,"k P(k) log(p(k)) log(1/k)" );
+//        
+//        for (int i = 0; i < PSVGList.size(); i++) {
+//            PSVGDet = PSVGList.get(i);
+//            Logger.getLogger(VisibilityDegree.class.getName()).log(Level.INFO, "{0} {1} {2} {3}", new Object[]{PSVGDet.getDegValue(), PSVGDet.getProbOfDegVal(), PSVGDet.getlogOfProbOfDegVal(), PSVGDet.getLogOfDegVal()});
+//            
+//        }
+//        Logger.getLogger(VisibilityDegree.class.getName()).log(Level.INFO, "PSVG{0}x + {1}", new Object[]{PSVGFractalDimension, PSVGIntercept});
+//        
+//    }
 
     public void setPSVGFractalDimension() {
 
@@ -162,37 +174,24 @@ public class VisibilityDegree {
     }
 
     public void calcPSVGList() {
-        PSVGList = new ArrayList<PSVGDetails>();
-        int degreeVal;
-        int degreeValCount;
-        int visibilityOrderIterator;
-        VgadjacencyDAO vgadjacencyDAO = new VgadjacencyDAO(DatabaseConnection.EMF);
-        Map<Integer,Integer> nodesAndDegreeMap = vgadjacencyDAO.getDegreesOfnodes();
-        int totalNodes = nodesAndDegreeMap.size();
-        if (nodesAndDegreeMap.size() < maxNodesForCalc) {
-            maxNodesForCalc = nodesAndDegreeMap.size();
-        }
-        int maxNodesOnBothSides = maxNodesForCalc * 2;
-        float probOfDegVal;
-        PSVGDetails PSVGDet;
+
+       
         
-        for (degreeVal = 0; degreeVal < maxNodesOnBothSides; degreeVal++) {
-            degreeValCount = 0;
-            for (visibilityOrderIterator = 0; visibilityOrderIterator < totalNodes; visibilityOrderIterator++) {
-                if (degreeVal == nodesAndDegreeMap.get(visibilityOrderIterator)) {
-                    degreeValCount++;
-                }
-            }
-            if (degreeValCount > 0) {
-                PSVGDet = new PSVGDetails();
+        VgadjacencyDAO vgadjacencyDAO = new VgadjacencyDAO(DatabaseConnection.EMF);
+        Map<Integer,Integer> nodesAndDegreeMap = vgadjacencyDAO.getDegreesOfnodes(psvgResultsTermInstanceSlug);
+        int totalNodes = nodesAndDegreeMap.size();
+        PSVGList = nodesAndDegreeMap.entrySet().stream().filter(nd->nd.getValue() > 0).map(nd->{
+                PSVGDetails PSVGDet = new PSVGDetails();
+                int degreeVal = nd.getKey();
+                int degreeValCount = nd.getValue();
                 PSVGDet.setDegValue(degreeVal);
                 PSVGDet.setNumOfNodesWithDegVal(degreeValCount);
-                probOfDegVal = (float) degreeValCount / totalNodes;
+                float probOfDegVal = (float) degreeValCount / totalNodes;
                 PSVGDet.setProbOfDegVal(probOfDegVal);
                 PSVGDet.setIsRequired(true);
-                PSVGList.add(PSVGDet);
-            }
-        }
+                return PSVGDet;
+        }).collect(Collectors.toList());
+
     }
 
     public void markPSVGoutliers(int PSVGRequiredStart, double PSVGDataPartFromStart) {

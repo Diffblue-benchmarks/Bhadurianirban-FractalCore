@@ -25,8 +25,9 @@ public class ImpVisibilityDegree {
     private boolean includePSVGInterCept;
     private Double improvedPSVG;
     private Double logBase;
+    private String psvgResultsTermInstanceSlug;
 
-    public ImpVisibilityDegree(List<Double> InputTimeSeries, int PSVGRequiredStart, Double PSVGDataPartFromStart, boolean includePSVGInterCept, int maxNodesForCalc, Double logBase, int maxGap) {
+    public ImpVisibilityDegree(List<Double> InputTimeSeries, int PSVGRequiredStart, Double PSVGDataPartFromStart, boolean includePSVGInterCept, int maxNodesForCalc, Double logBase, int maxGap,String psvgResultsTermInstanceSlug) {
         this.InputTimeSeries = InputTimeSeries;
         this.PSVGRequiredStart = PSVGRequiredStart;
         this.PSVGDataPartFromStart = PSVGDataPartFromStart;
@@ -34,6 +35,7 @@ public class ImpVisibilityDegree {
         this.maxGap = maxGap;
         this.includePSVGInterCept = includePSVGInterCept;
         this.logBase = logBase;
+        this.psvgResultsTermInstanceSlug =psvgResultsTermInstanceSlug;
         
     }
 
@@ -51,7 +53,7 @@ public class ImpVisibilityDegree {
         Double[] PSVGofBrokenTS = new Double[maxGap];
         for (int gapCounter = 0; gapCounter < maxGap; gapCounter++) {
             List<Double> brokenTimeSeries = TimeSeriesUtil.getGappedTimeSeries(InputTimeSeries, gapCounter + 1);
-            VisibilityDegree visDegree = new VisibilityDegree(brokenTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, 0.0, logBase);
+            VisibilityDegree visDegree = new VisibilityDegree(brokenTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, 0.0, logBase,psvgResultsTermInstanceSlug);
             visDegree.calculateVisibilityDegree();
             PSVGofBrokenTS[gapCounter] = visDegree.getPSVGFractalDimension();
         }

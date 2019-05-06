@@ -63,15 +63,15 @@ public class VgadjacencyDAO extends VgadjacencyJpaController {
         return response;
     }
     
-    public Map<Integer,Integer> getDegreesOfnodes() {
+    public Map<Integer,Integer> getDegreesOfnodes(String psvgResultsTermInstanceSlug) {
         
         String nativeQueryString = "select nodenum,sum(degree) as d from \n" +
-                    "(select node as nodenum, count(adjnode) as degree from vgadjacency group by node union all\n" +
-                    "select adjnode as nodenum, count(node) as degree from vgadjacency group by adjnode  order by nodenum ) a group by nodenum";
+                    "(select node as nodenum, count(adjnode) as degree from vgadjacency where psvgresultsslug= ?1 group by node union all\n" +
+                    "select adjnode as nodenum, count(node) as degree from vgadjacency where psvgresultsslug= ?1 group by adjnode  order by nodenum ) a group by nodenum";
         EntityManager em = getEntityManager();
         
         Query query = em.createNativeQuery(nativeQueryString);
-        
+        query.setParameter(1, psvgResultsTermInstanceSlug);
         List<Object[]> nodesAndDegrees = query.getResultList();
         Map<Integer,Integer> nodesAndDegreeMap = new HashMap<>();
         for (Object[] nodesAndDegree:nodesAndDegrees ) {
@@ -90,16 +90,17 @@ public class VgadjacencyDAO extends VgadjacencyJpaController {
         
     }
 
-    public Map<Integer,Integer> getNodeCountsforDegree() {
+    public Map<Integer,Integer> getNodeCountsforDegree(String psvgResultsTermInstanceSlug) {
         
         String nativeQueryString = "select d as degreeval,count(nodenum) as nodeswithdegval from\n" +
-"(select nodenum,sum(degree) as d from \n" +
-"(select node as nodenum, count(adjnode) as degree from vgadjacency group by node union all\n" +
-"select adjnode as nodenum, count(node) as degree from vgadjacency group by adjnode  order by nodenum ) a group by a.nodenum) b group by b.d order by b.d";
+                "(select nodenum,sum(degree) as d from \n" +
+                "(select node as nodenum, count(adjnode) as degree from vgadjacency where psvgresultsslug= ?1 group by node union all\n" +
+                "select adjnode as nodenum, count(node) as degree from vgadjacency where psvgresultsslug= ?1 group by adjnode  order by nodenum ) a group by a.nodenum) b group by b.d order by b.d";
+        
         EntityManager em = getEntityManager();
         
         Query query = em.createNativeQuery(nativeQueryString);
-        
+        query.setParameter(1, psvgResultsTermInstanceSlug);
         List<Object[]> nodesAndDegrees = query.getResultList();
         Map<Integer,Integer> nodesAndDegreeMap = new HashMap<>();
         for (Object[] nodesAndDegree:nodesAndDegrees ) {

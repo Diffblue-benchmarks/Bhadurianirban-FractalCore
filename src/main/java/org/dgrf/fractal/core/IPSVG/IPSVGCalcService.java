@@ -85,9 +85,9 @@ public class IPSVGCalcService {
         int maxGap = Integer.parseInt((String) selectedPsvgParamData.get(PSVGParamMeta.IPSVG_MAX_GAP));
         List<IPSVGDetails> IPSVGDetailsList;
         Double ipsvg;
-
+        String ipsvgResultsTermInstanceSlug = dataSeriesSlug + FractalConstants.TERM_INSTANCE_SLUG_IPSVG_EXT;
         List<Double> InputTimeSeries = dataSeriesDao.getDataSeriesYvalPosById(dataseriesId);
-        ImpVisibilityDegree impVisDegree = new ImpVisibilityDegree(InputTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, logBase, maxGap);
+        ImpVisibilityDegree impVisDegree = new ImpVisibilityDegree(InputTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, logBase, maxGap,ipsvgResultsTermInstanceSlug);
         impVisDegree.calculateVisibilityDegree();
         IPSVGDetailsList = impVisDegree.getImpPSVGList();
         ipsvg = impVisDegree.getImprovedPSVG();
@@ -97,7 +97,7 @@ public class IPSVGCalcService {
         ipsvgCalcResults.put(IPSVGResultsMeta.DATASERIES, dataSeriesSlug);
         ipsvgCalcResults.put(IPSVGResultsMeta.IMPROVED_PSVG, df.format(ipsvg));
         ipsvgCalcResults.put(IPSVGResultsMeta.QUEUED, "No");
-        String ipsvgResultsTermInstanceSlug = dataSeriesSlug + FractalConstants.TERM_INSTANCE_SLUG_IPSVG_EXT;
+        
         ipsvgCalcResults.put(CMSConstants.TERM_INSTANCE_SLUG, ipsvgResultsTermInstanceSlug);
         ipsvgCalcResults.put(CMSConstants.TERM_SLUG, FractalConstants.TERM_SLUG_IPSVG_CALC);
         int response = storeIPSVGResults(ipsvgResultsTermInstanceSlug, IPSVGDetailsList);

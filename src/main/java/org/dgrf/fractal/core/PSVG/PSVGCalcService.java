@@ -120,10 +120,10 @@ public class PSVGCalcService {
         List<Double> InputTimeSeries = dataSeriesDao.getDataSeriesYvalPosById(dataseriesId);
         //write VG in file.
         //open temp VG in file.
-        PSVGGraphStore.psvgresultsslug = psvgResultsTermInstanceSlug;
+       
         
         //initialise VG Calculation
-        VisibilityDegree visDegree = new VisibilityDegree(InputTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, rejectCut, logBase);
+        VisibilityDegree visDegree = new VisibilityDegree(InputTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, rejectCut, logBase,psvgResultsTermInstanceSlug);
         visDegree.calculateVisibilityDegree();
         //close  temp VG in file.
         
