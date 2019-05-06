@@ -4,7 +4,7 @@ import org.dgrf.fractal.core.util.LogUtil;
 
 
 
-public class PSVGDetails {
+public class VGDegreeDistribution {
 	private int degValue;
 	private int numOfNodesWithDegVal;
 	private double probOfDegVal;

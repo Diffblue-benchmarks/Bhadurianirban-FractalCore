@@ -114,7 +114,7 @@ public class PSVGCalcService {
 
         String psvgResultsTermInstanceSlug = selectedDataSeries.get(CMSConstants.TERM_INSTANCE_SLUG) + FractalConstants.TERM_INSTANCE_SLUG_PSVG_EXT + FractalConstants.PSVG_CALC_TYPE_N;
 
-        List<PSVGDetails> PSVGDetailsList;
+        
         Double PSVGIntercept, PSVGFractalDimension, PSVGInterceptSE, PSVGFractalDimensionSE, PSVGChiSquareVal, PSVGRSquared;
 
         List<Double> InputTimeSeries = dataSeriesDao.getDataSeriesYvalPosById(dataseriesId);
@@ -131,7 +131,7 @@ public class PSVGCalcService {
         
         //delete temp VG in file.
         
-        PSVGDetailsList = visDegree.getPSVGList();
+        List<VGDegreeDistribution> vgDegreeDistributionList = visDegree.getVgDegreeDistributionList();
         PSVGIntercept = visDegree.getPSVGIntercept();
         PSVGFractalDimension = visDegree.getPSVGFractalDimension();
         PSVGInterceptSE = visDegree.getPSVGInterceptSE();
@@ -153,7 +153,7 @@ public class PSVGCalcService {
         psvgCalcResults.put(CMSConstants.TERM_SLUG, FractalConstants.TERM_SLUG_PSVG_CALC);
         psvgCalcResults.put(CMSConstants.TERM_INSTANCE_SLUG, psvgResultsTermInstanceSlug);
         PSVGGraphStore.psvgresultsslug = psvgResultsTermInstanceSlug;
-        int response = storePSVGResults(psvgResultsTermInstanceSlug, PSVGDetailsList);
+        int response = storePSVGResults(psvgResultsTermInstanceSlug, vgDegreeDistributionList);
         if (response != FractalResponseCode.SUCCESS) {
             return null;
         }
@@ -172,7 +172,7 @@ public class PSVGCalcService {
         int maxNodesForCalc = Integer.parseInt((String) selectedPsvgParamData.get(PSVGParamMeta.MAX_NODES_FOR_CALC));
         double rejectCut = Double.parseDouble((String) selectedPsvgParamData.get(PSVGParamMeta.REJECT_CUT));
         double logBase = Double.parseDouble((String) selectedPsvgParamData.get(PSVGParamMeta.LOG_BASE));
-        List<PSVGDetails> PSVGDetailsList;
+        List<VGDegreeDistribution> PSVGDetailsList;
         Double PSVGIntercept, PSVGFractalDimension, PSVGInterceptSE, PSVGFractalDimensionSE, PSVGChiSquareVal, PSVGRSquared;
 
         List<Double> InputTimeSeries = dataSeriesDao.getDataSeriesYvalPosById(dataseriesId);
@@ -229,7 +229,7 @@ public class PSVGCalcService {
         double rejectCut = Double.parseDouble((String) selectedPsvgParamData.get(PSVGParamMeta.REJECT_CUT));
         double logBase = Double.parseDouble((String) selectedPsvgParamData.get(PSVGParamMeta.LOG_BASE));
         String psvgResultsTermInstanceSlug = selectedDataSeries.get(CMSConstants.TERM_INSTANCE_SLUG) + FractalConstants.TERM_INSTANCE_SLUG_PSVG_EXT + FractalConstants.PSVG_CALC_TYPE_XY;
-        List<PSVGDetails> PSVGDetailsList;
+        List<VGDegreeDistribution> PSVGDetailsList;
         Double PSVGIntercept, PSVGFractalDimension, PSVGInterceptSE, PSVGFractalDimensionSE, PSVGChiSquareVal, PSVGRSquared;
 
         List<XYData> InputTimeSeries = dataSeriesDao.getDataSeriesXYPosById(dataseriesId);
@@ -317,11 +317,11 @@ public class PSVGCalcService {
         return fractalDTO;
     }
 
-    private int storePSVGResults(String psvgResultsTermInstanceSlug, List<PSVGDetails> PSVGDetailsList) {
+    private int storePSVGResults(String psvgResultsTermInstanceSlug, List<VGDegreeDistribution> PSVGDetailsList) {
         int response;
         PsvgresultsDAO psvgresultsDAO = new PsvgresultsDAO(DatabaseConnection.EMF);
         for (int i = 0; i < PSVGDetailsList.size(); i++) {
-            PSVGDetails psvgDetails = PSVGDetailsList.get(i);
+            VGDegreeDistribution psvgDetails = PSVGDetailsList.get(i);
             Psvgresults psvgresults = new Psvgresults(psvgResultsTermInstanceSlug, i);
             psvgresults.setDegreeval(psvgDetails.getDegValue());
             psvgresults.setProbofdegreeval(psvgDetails.getProbOfDegVal());

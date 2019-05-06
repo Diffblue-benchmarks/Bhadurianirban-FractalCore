@@ -14,7 +14,7 @@ public class hVisibilityDegree {
 
 	private List<Double> InputTimeSeries;
 	private ArrayList<Integer> visibilityOrder;
-	private ArrayList<PSVGDetails> PSVGList;
+	private ArrayList<VGDegreeDistribution> PSVGList;
 	private int PSVGRequiredStart;
 	private double PSVGDataPartFromStart;
 	private double PSVGIntercept;
@@ -33,7 +33,7 @@ public class hVisibilityDegree {
 	}
 
 	
-	public ArrayList<PSVGDetails> getPSVGList () {
+	public ArrayList<VGDegreeDistribution> getPSVGList () {
 		return PSVGList;
 	}
 	public double getPSVGIntercept () {
@@ -56,7 +56,7 @@ public class hVisibilityDegree {
 		
 	}
 	public void printPSVGListToConsole() {
-	PSVGDetails PSVGDet = new PSVGDetails();
+	VGDegreeDistribution PSVGDet = new VGDegreeDistribution();
 	
         Logger.getLogger(hVisibilityDegree.class.getName()).log(Level.INFO,"k P(k) log(p(k)) log(1/k)" );
 	for (int i=0;i< PSVGList.size();i++) {
@@ -139,7 +139,7 @@ public class hVisibilityDegree {
 		
 	}
 	public void calcPSVGList() {
-		PSVGList = new ArrayList<PSVGDetails>();
+		PSVGList = new ArrayList<VGDegreeDistribution>();
 		int degreeVal;
 		int degreeValCount;
 		int visibilityOrderIterator;
@@ -149,7 +149,7 @@ public class hVisibilityDegree {
 		}
 		int maxNodesOnBothSides = maxNodesForCalc*2;
 		float probOfDegVal;
-		PSVGDetails PSVGDet;
+		VGDegreeDistribution PSVGDet;
 		for (degreeVal=0;degreeVal<maxNodesOnBothSides;degreeVal++) {
 			degreeValCount = 0;
 			for (visibilityOrderIterator=0;visibilityOrderIterator<totalNodes;visibilityOrderIterator++) {
@@ -158,7 +158,7 @@ public class hVisibilityDegree {
 				}
 			}
 			if (degreeValCount>0) {
-				PSVGDet = new PSVGDetails();
+				PSVGDet = new VGDegreeDistribution();
 				PSVGDet.setDegValue(degreeVal);
 				PSVGDet.setNumOfNodesWithDegVal(degreeValCount);
 				probOfDegVal = (float) degreeValCount/totalNodes;

@@ -13,7 +13,7 @@ public class VisibilityDegree1 {
 
     private List<Double> InputTimeSeries;
     private ArrayList<Integer> visibilityOrder;
-    private ArrayList<PSVGDetails> PSVGList;
+    private ArrayList<VGDegreeDistribution> PSVGList;
     private int PSVGRequiredStart;
     private double PSVGDataPartFromStart;
     private double PSVGIntercept;
@@ -40,7 +40,7 @@ public class VisibilityDegree1 {
 
     }
 
-    public ArrayList<PSVGDetails> getPSVGList() {
+    public ArrayList<VGDegreeDistribution> getPSVGList() {
         return PSVGList;
     }
 
@@ -67,7 +67,7 @@ public class VisibilityDegree1 {
     }
 
     public void printPSVGListToConsole() {
-        PSVGDetails PSVGDet = new PSVGDetails();
+        VGDegreeDistribution PSVGDet = new VGDegreeDistribution();
         Logger.getLogger(VisibilityDegree1.class.getName()).log(Level.INFO,"k P(k) log(p(k)) log(1/k)" );
         
         for (int i = 0; i < PSVGList.size(); i++) {
@@ -158,7 +158,7 @@ public class VisibilityDegree1 {
     }
 
     public void calcPSVGList() {
-        PSVGList = new ArrayList<PSVGDetails>();
+        PSVGList = new ArrayList<VGDegreeDistribution>();
         int degreeVal;
         int degreeValCount;
         int visibilityOrderIterator;
@@ -168,7 +168,7 @@ public class VisibilityDegree1 {
         }
         int maxNodesOnBothSides = maxNodesForCalc * 2;
         float probOfDegVal;
-        PSVGDetails PSVGDet;
+        VGDegreeDistribution PSVGDet;
         for (degreeVal = 0; degreeVal < maxNodesOnBothSides; degreeVal++) {
             degreeValCount = 0;
             for (visibilityOrderIterator = 0; visibilityOrderIterator < totalNodes; visibilityOrderIterator++) {
@@ -177,7 +177,7 @@ public class VisibilityDegree1 {
                 }
             }
             if (degreeValCount > 0) {
-                PSVGDet = new PSVGDetails();
+                PSVGDet = new VGDegreeDistribution();
                 PSVGDet.setDegValue(degreeVal);
                 PSVGDet.setNumOfNodesWithDegVal(degreeValCount);
                 probOfDegVal = (float) degreeValCount / totalNodes;
