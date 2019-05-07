@@ -1,5 +1,6 @@
 package org.dgrf.fractal.core.PSVG;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -228,7 +229,8 @@ public class VisibilityDegree {
             PSVGDet.setProbOfDegVal(probOfDegVal);
             PSVGDet.setIsRequired(true);
             return PSVGDet;
-        }).collect(Collectors.toList());
+        }).sorted(Comparator.comparing(m->m.getDegValue())).collect(Collectors.toList());
+        //}).collect(Collectors.toList()).stream().sorted(Comparator.comparing(m->m.getDegValue())).collect(Collectors.toList());
 
     }
 

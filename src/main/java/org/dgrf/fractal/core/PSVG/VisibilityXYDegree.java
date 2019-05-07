@@ -1,6 +1,7 @@
 package org.dgrf.fractal.core.PSVG;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -58,9 +59,9 @@ public class VisibilityXYDegree {
         PSVGGraphStore.psvgresultsslug = psvgResultsTermInstanceSlug;
         PSVGGraphStore.createVisibilityGraphFile();
         
-        initializeDegree(InputTimeSeries);
-        iterateAndCalcDegree(InputTimeSeries);
-        
+        //initializeDegree(InputTimeSeries);
+        //iterateAndCalcDegree(InputTimeSeries);
+        createVGEdges();
         PSVGGraphStore.closeVisibilityGraphFile();
         PSVGGraphStore.storeVisibilityGraphInDB(DatabaseConnection.EMF);
         PSVGGraphStore.delVisibilityGraphFile();
@@ -75,7 +76,50 @@ public class VisibilityXYDegree {
         setPSVGFractalDimension();
 
     }
+    private void createVGEdges() {
+        int totalNodes = InputTimeSeries.size();
+        if (InputTimeSeries.size() < maxNodesForCalc) {
+            maxNodesForCalc = InputTimeSeries.size();
+        }
 
+        for (int nodeGap = 1; nodeGap < maxNodesForCalc; nodeGap++) {
+            for (int currentNodeIndex = 0; currentNodeIndex < (totalNodes - nodeGap); currentNodeIndex++) {
+                int nodeToCompareIndex = currentNodeIndex + nodeGap;
+
+                if (nodeGap == 1) {
+                    PSVGGraphStore.storeVisibilityGraphInFile(currentNodeIndex, nodeToCompareIndex);
+                } else {
+                    Boolean isVisible = checkVisibility(currentNodeIndex, nodeToCompareIndex);
+                    if (isVisible) {
+                        PSVGGraphStore.storeVisibilityGraphInFile(currentNodeIndex, nodeToCompareIndex);
+                    }
+                }
+            }
+        }
+    }
+
+    private Boolean checkVisibility(int currentNodeIndex, int nodeToCompareIndex) {
+
+        Double currentNodeXVal = InputTimeSeries.get(currentNodeIndex).getxValue();
+        Double currentNodeYVal = InputTimeSeries.get(currentNodeIndex).getyValue();
+
+        Double nodeToCompareXVal = InputTimeSeries.get(nodeToCompareIndex).getxValue();
+        Double nodeToCompareYVal = InputTimeSeries.get(nodeToCompareIndex).getyValue();
+        List<XYData> seriesInBetween  = InputTimeSeries.subList(currentNodeIndex+1,nodeToCompareIndex);
+        for (int i=0;i<seriesInBetween.size();i++) {
+            Double inBetweenNodeXVal = seriesInBetween.get(currentNodeIndex+i+1).getxValue();
+            Double inBetweenNodeYVal = seriesInBetween.get(i).getyValue();
+            
+            Double baseRatio = (inBetweenNodeXVal-currentNodeXVal)/(nodeToCompareXVal-currentNodeXVal);
+            Double inBetweenHeight = (baseRatio*(nodeToCompareYVal-currentNodeYVal))+currentNodeYVal;
+            
+            if (inBetweenNodeYVal >= inBetweenHeight) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
     public void printPSVGListToConsole() {
         VGDegreeDistribution PSVGDet;
         
@@ -168,7 +212,7 @@ public class VisibilityXYDegree {
             PSVGDet.setProbOfDegVal(probOfDegVal);
             PSVGDet.setIsRequired(true);
             return PSVGDet;
-        }).collect(Collectors.toList());
+        }).sorted(Comparator.comparing(m->m.getDegValue())).collect(Collectors.toList());
     }
 //    
 //    public void calcPSVGList() {
