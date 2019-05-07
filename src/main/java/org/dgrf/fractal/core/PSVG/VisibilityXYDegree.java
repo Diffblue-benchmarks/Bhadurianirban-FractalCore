@@ -106,6 +106,7 @@ public class VisibilityXYDegree {
         Double nodeToCompareXVal = InputTimeSeries.get(nodeToCompareIndex).getxValue();
         Double nodeToCompareYVal = InputTimeSeries.get(nodeToCompareIndex).getyValue();
         List<XYData> seriesInBetween  = InputTimeSeries.subList(currentNodeIndex+1,nodeToCompareIndex);
+        System.out.println("compare "+currentNodeIndex+" "+nodeToCompareIndex);
         for (int i=0;i<seriesInBetween.size();i++) {
             Double inBetweenNodeXVal = seriesInBetween.get(currentNodeIndex+i+1).getxValue();
             Double inBetweenNodeYVal = seriesInBetween.get(i).getyValue();
