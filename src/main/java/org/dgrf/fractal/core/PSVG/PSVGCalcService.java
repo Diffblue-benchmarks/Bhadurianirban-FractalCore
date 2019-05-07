@@ -235,19 +235,18 @@ public class PSVGCalcService {
         List<XYData> InputTimeSeries = dataSeriesDao.getDataSeriesXYPosById(dataseriesId);
         //write VG in file.
         //open temp VG in file.
-        PSVGGraphStore.psvgresultsslug = psvgResultsTermInstanceSlug;
-        PSVGGraphStore.createVisibilityGraphFile();
+        
         //initialise VG Calculation
 
-        VisibilityXYDegree visXYDegree = new VisibilityXYDegree(InputTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, rejectCut, logBase);
+        VisibilityXYDegree visXYDegree = new VisibilityXYDegree(InputTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, rejectCut, logBase,psvgResultsTermInstanceSlug);
         visXYDegree.calculateVisibilityDegree();
         //close  temp VG in file.
-        PSVGGraphStore.closeVisibilityGraphFile();
+        
         //store the Graph in table as adjacency list
-        PSVGGraphStore.storeVisibilityGraphInDB(DatabaseConnection.EMF);
+        
         //delete temp VG in file.
-        PSVGGraphStore.delVisibilityGraphFile();
-        PSVGDetailsList = visXYDegree.getPSVGList();
+        
+        PSVGDetailsList = visXYDegree.getVgDegreeDistributionList();
         PSVGIntercept = visXYDegree.getPSVGIntercept();
         PSVGFractalDimension = visXYDegree.getPSVGFractalDimension();
         PSVGInterceptSE = visXYDegree.getPSVGInterceptSE();
