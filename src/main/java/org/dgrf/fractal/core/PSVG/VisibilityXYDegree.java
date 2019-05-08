@@ -59,9 +59,9 @@ public class VisibilityXYDegree {
         PSVGGraphStore.psvgresultsslug = psvgResultsTermInstanceSlug;
         PSVGGraphStore.createVisibilityGraphFile();
         
-        //initializeDegree(InputTimeSeries);
-        //iterateAndCalcDegree(InputTimeSeries);
-        createVGEdges();
+        initializeDegree(InputTimeSeries);
+        iterateAndCalcDegree(InputTimeSeries);
+        //createVGEdges();
         PSVGGraphStore.closeVisibilityGraphFile();
         PSVGGraphStore.storeVisibilityGraphInDB(DatabaseConnection.EMF);
         PSVGGraphStore.delVisibilityGraphFile();
@@ -106,9 +106,9 @@ public class VisibilityXYDegree {
         Double nodeToCompareXVal = InputTimeSeries.get(nodeToCompareIndex).getxValue();
         Double nodeToCompareYVal = InputTimeSeries.get(nodeToCompareIndex).getyValue();
         List<XYData> seriesInBetween  = InputTimeSeries.subList(currentNodeIndex+1,nodeToCompareIndex);
-        System.out.println("compare "+currentNodeIndex+" "+nodeToCompareIndex);
+        //System.out.println("compare "+currentNodeIndex+" "+nodeToCompareIndex);
         for (int i=0;i<seriesInBetween.size();i++) {
-            Double inBetweenNodeXVal = seriesInBetween.get(currentNodeIndex+i+1).getxValue();
+            Double inBetweenNodeXVal = seriesInBetween.get(i).getxValue();
             Double inBetweenNodeYVal = seriesInBetween.get(i).getyValue();
             
             Double baseRatio = (inBetweenNodeXVal-currentNodeXVal)/(nodeToCompareXVal-currentNodeXVal);
