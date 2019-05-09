@@ -6,11 +6,13 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.persistence.EntityManager;
 
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.dgrf.fractal.core.util.DatabaseConnection;
 import org.dgrf.fractal.core.util.LogUtil;
 import org.dgrf.fractal.db.DAO.VgadjacencyDAO;
+import org.dgrf.fractal.db.entities.Vgadjacency;
 
 public class VisibilityXYDegree {
 
@@ -30,7 +32,8 @@ public class VisibilityXYDegree {
     private double PSVGChiSquareVal;
     private double PSVGRSquared;
 
-    
+    private EntityManager em;
+    private int rowCount;
 
     public VisibilityXYDegree(List<XYData> InputTimeSeries, int PSVGRequiredStart, double PSVGDataPartFromStart,
             boolean includePSVGInterCept, int maxNodesForCalc, double PSVHChiSquarerejectCut, double logBase, String psvgResultsTermInstanceSlug) {
@@ -53,15 +56,25 @@ public class VisibilityXYDegree {
     }
 
     public void calculateVisibilityDegree() {
-        PSVGGraphStore.psvgresultsslug = PSVG_RESULTS_TERM_INSTANCE_SLUG;
-        PSVGGraphStore.createVisibilityGraphFile();
+        //PSVGGraphStore.psvgresultsslug = PSVG_RESULTS_TERM_INSTANCE_SLUG;
+        //PSVGGraphStore.createVisibilityGraphFile();
 
         //initializeDegree(InputTimeSeries);
         //iterateAndCalcDegree(InputTimeSeries);
+        VgadjacencyDAO vgadjacencyDAO = new VgadjacencyDAO(DatabaseConnection.EMF);
+        vgadjacencyDAO.deleteVisibilityGraph(PSVG_RESULTS_TERM_INSTANCE_SLUG);
+        em = vgadjacencyDAO.getEntityManager();
+        em.getTransaction().begin();
+        rowCount=0;
+        
         createVGEdges();
-        PSVGGraphStore.closeVisibilityGraphFile();
-        PSVGGraphStore.storeVisibilityGraphInDB(DatabaseConnection.EMF);
-        PSVGGraphStore.delVisibilityGraphFile();
+        
+        em.flush();
+        em.clear();
+        em.getTransaction().commit();
+//        PSVGGraphStore.closeVisibilityGraphFile();
+//        PSVGGraphStore.storeVisibilityGraphInDB(DatabaseConnection.EMF);
+//        PSVGGraphStore.delVisibilityGraphFile();
 
         createDegreeDistribution();
         markOutliersOfDegreeDistribution();
@@ -85,13 +98,31 @@ public class VisibilityXYDegree {
 
                 Boolean isVisible = checkVisibility(currentNodeIndex, nodeToCompareIndex);
                 if (isVisible) {
-                    PSVGGraphStore.storeVisibilityGraphInFile(currentNodeIndex, nodeToCompareIndex);
+                    insertNewEdge(currentNodeIndex, nodeToCompareIndex);
+                    //PSVGGraphStore.storeVisibilityGraphInFile(currentNodeIndex, nodeToCompareIndex);
                 }
 
             }
         }
     }
+    
+    private void insertNewEdge(int node, int adjnode) {
+        //VgadjacencyPK vgadjacencyPK = new VgadjacencyPK(PSVG_RESULTS_TERM_INSTANCE_SLUG, node, adjnode);
+        Vgadjacency vgadjacency = new Vgadjacency(PSVG_RESULTS_TERM_INSTANCE_SLUG, node, adjnode);
+        try {
+            em.persist(vgadjacency);
+            if (rowCount % 3000 == 0) {
+                System.out.println("Committing " + rowCount);
+                em.flush();
+                em.clear();
 
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(VisibilityDegree.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        rowCount++;
+    }
+    
     private Boolean checkVisibility(int currentNodeIndex, int nodeToCompareIndex) {
 
         Double currentNodeXVal = InputTimeSeries.get(currentNodeIndex).getxValue();

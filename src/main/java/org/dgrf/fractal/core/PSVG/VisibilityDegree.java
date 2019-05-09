@@ -7,8 +7,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.dgrf.fractal.constants.FractalConstants;
@@ -16,7 +14,7 @@ import org.dgrf.fractal.core.util.DatabaseConnection;
 import org.dgrf.fractal.core.util.LogUtil;
 import org.dgrf.fractal.db.DAO.VgadjacencyDAO;
 import org.dgrf.fractal.db.entities.Vgadjacency;
-import org.dgrf.fractal.db.entities.VgadjacencyPK;
+
 
 public class VisibilityDegree {
 
@@ -74,6 +72,7 @@ public class VisibilityDegree {
         em = vgadjacencyDAO.getEntityManager();
         em.getTransaction().begin();
         rowCount=0;
+        
         createVGEdges();
 
         em.flush();
@@ -138,8 +137,8 @@ public class VisibilityDegree {
         Vgadjacency vgadjacency = new Vgadjacency(PSVG_RESULTS_TERM_INSTANCE_SLUG, node, adjnode);
         try {
             em.persist(vgadjacency);
-            if (rowCount % 1500 == 0) {
-                System.out.println("Committing " + rowCount);
+            if (rowCount % 3000 == 0) {
+                //System.out.println("Committing " + rowCount);
                 em.flush();
                 em.clear();
 
