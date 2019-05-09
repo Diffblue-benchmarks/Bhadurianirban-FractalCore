@@ -15,13 +15,13 @@ import org.dgrf.fractal.db.DAO.VgadjacencyDAO;
 
 public class VisibilityDegree {
 
-    private List<Double> InputTimeSeries;
-    private int PSVGRequiredStart;
-    private double PSVGDataPartFromStart;
-    private double rejectCut;
-    private boolean includePSVGInterCept;
-    private int maxNodesForCalc;
-    private String psvgResultsTermInstanceSlug;
+    private final List<Double> InputTimeSeries;
+    private final int FIT_DATA_START_INDEX;
+    private final double FIT_DATA_PART_FROM_START;
+    private final double CHI_SQUARE_REJECT_CUT;
+    private final boolean FIT_INCLUDE_INTERCEPT;
+    private final int MAX_NODES_FOR_CALC;
+    private final String PSVG_RESULTS_TERM_INSTANCE_SLUG;
     
     private List<VGDegreeDistribution> vgDegreeDistributionList;
     
@@ -38,13 +38,13 @@ public class VisibilityDegree {
     public VisibilityDegree(List<Double> InputTimeSeries, int PSVGRequiredStart, double PSVGDataPartFromStart,
             boolean includePSVGInterCept, int maxNodesForCalc, Double rejectCut, double logBase, String psvgResultsTermInstanceSlug) {
         this.InputTimeSeries = InputTimeSeries;
-        this.PSVGRequiredStart = PSVGRequiredStart;
-        this.PSVGDataPartFromStart = PSVGDataPartFromStart;
-        this.includePSVGInterCept = includePSVGInterCept;
-        this.maxNodesForCalc = maxNodesForCalc;
-        this.rejectCut = rejectCut;
+        this.FIT_DATA_START_INDEX = PSVGRequiredStart;
+        this.FIT_DATA_PART_FROM_START = PSVGDataPartFromStart;
+        this.FIT_INCLUDE_INTERCEPT = includePSVGInterCept;
+        this.MAX_NODES_FOR_CALC = maxNodesForCalc;
+        this.CHI_SQUARE_REJECT_CUT = rejectCut;
         LogUtil.setLogBase(logBase);
-        this.psvgResultsTermInstanceSlug = psvgResultsTermInstanceSlug;
+        this.PSVG_RESULTS_TERM_INSTANCE_SLUG = psvgResultsTermInstanceSlug;
 
     }
 
@@ -62,22 +62,22 @@ public class VisibilityDegree {
 
     public void calculateVisibilityDegree() {
 
-        PSVGGraphStore.psvgresultsslug = psvgResultsTermInstanceSlug;
+        PSVGGraphStore.psvgresultsslug = PSVG_RESULTS_TERM_INSTANCE_SLUG;
         PSVGGraphStore.createVisibilityGraphFile();
-        //initializeDegree(InputTimeSeries);
-        //iterateAndCalcDegree(InputTimeSeries);
+
         createVGEdges();
+
         PSVGGraphStore.closeVisibilityGraphFile();
         PSVGGraphStore.storeVisibilityGraphInDB(DatabaseConnection.EMF);
         PSVGGraphStore.delVisibilityGraphFile();
-        createDegreeDistribution();
-        markOutliersOfDegreeDistribution(PSVGRequiredStart, PSVGDataPartFromStart);
 
+        createDegreeDistribution();
+        markOutliersOfDegreeDistribution();
         fitDegreeDistribution();
         
-        if (!psvgResultsTermInstanceSlug.contains(FractalConstants.TERM_INSTANCE_SLUG_IPSVG_EXT)) {
+        if (!PSVG_RESULTS_TERM_INSTANCE_SLUG.contains(FractalConstants.TERM_INSTANCE_SLUG_IPSVG_EXT)) {
             VgadjacencyDAO vgadjacencyDAO = new VgadjacencyDAO(DatabaseConnection.EMF);
-            vgadjacencyDAO.deleteVisibilityGraph(psvgResultsTermInstanceSlug);
+            vgadjacencyDAO.deleteVisibilityGraph(PSVG_RESULTS_TERM_INSTANCE_SLUG);
         }
 
     }
@@ -95,7 +95,7 @@ public class VisibilityDegree {
 //        
 //    }
     public void fitDegreeDistribution() {
-        SimpleRegression PSVGRegSet = new SimpleRegression(includePSVGInterCept);
+        SimpleRegression PSVGRegSet = new SimpleRegression(FIT_INCLUDE_INTERCEPT);
         vgDegreeDistributionList.stream().forEach(vgd -> {
             if (vgd.getIsRequired()) {
                 PSVGRegSet.addData(vgd.getLogOfDegVal(), vgd.getlogOfProbOfDegVal());
@@ -107,27 +107,16 @@ public class VisibilityDegree {
         PSVGFractalDimensionSE = PSVGRegSet.getSlopeStdErr();
         PSVGInterceptSE = PSVGRegSet.getInterceptStdErr();
         
-        if (rejectCut > 0.0) {
+        if (CHI_SQUARE_REJECT_CUT > 0.0) {
             calcPSVGChiSquareVal(PSVGRegSet);
         }
     }
 
-//    public void initializeDegree(List<Double> InputTimeSeries) {
-//        /* For a particular node the nodes of its two sides are always visible
-//		 * So the 2 is the default order for each node and that is why the order 
-//		 * arraylist is initialised with 2. But for the nodes at the two terminals
-//		 * only one node is visible by default they are set to 1. 
-//         */
-//
-//        for (int i = 0; i < InputTimeSeries.size(); i++) {
-//
-//            PSVGGraphStore.storeVisibilityGraphInFile(i, i + 1);
-//        }
-//
-//    }
+
     private void createVGEdges() {
         int totalNodes = InputTimeSeries.size();
-        if (InputTimeSeries.size() < maxNodesForCalc) {
+        int maxNodesForCalc= MAX_NODES_FOR_CALC;
+        if (InputTimeSeries.size() < MAX_NODES_FOR_CALC) {
             maxNodesForCalc = InputTimeSeries.size();
         }
 
@@ -171,7 +160,7 @@ public class VisibilityDegree {
     public void createDegreeDistribution() {
 
         VgadjacencyDAO vgadjacencyDAO = new VgadjacencyDAO(DatabaseConnection.EMF);
-        Map<Integer, Integer> nodesAndDegreeMap = vgadjacencyDAO.getNodeCountsforDegree(psvgResultsTermInstanceSlug);
+        Map<Integer, Integer> nodesAndDegreeMap = vgadjacencyDAO.getNodeCountsforDegree(PSVG_RESULTS_TERM_INSTANCE_SLUG);
         int totalNodes = nodesAndDegreeMap.size();
         vgDegreeDistributionList = nodesAndDegreeMap.entrySet().stream().filter(nd -> nd.getValue() > 0).map(nd -> {
             VGDegreeDistribution PSVGDet = new VGDegreeDistribution();
@@ -188,23 +177,24 @@ public class VisibilityDegree {
 
     }
 
-    public void markOutliersOfDegreeDistribution(int PSVGRequiredStart, double PSVGDataPartFromStart) {
+    public void markOutliersOfDegreeDistribution() {
         
 
-        int PSVGRequiredEnd = (int) ((int) vgDegreeDistributionList.size() * PSVGDataPartFromStart);
+        int PSVGRequiredEnd = (int) ((int) vgDegreeDistributionList.size() * FIT_DATA_PART_FROM_START);
         /*
 		 * We need at least 4 data points to fit and find the PSVG gradient.
          */
-        if (PSVGRequiredEnd < (PSVGRequiredStart + 4)) {
-            PSVGRequiredStart = 0;
+        int fitDataStartIndex = FIT_DATA_START_INDEX;
+        if (PSVGRequiredEnd < (FIT_DATA_START_INDEX + 4)) {
+            fitDataStartIndex = 0;
             PSVGRequiredEnd = vgDegreeDistributionList.size();
         }
-        if (PSVGRequiredStart > vgDegreeDistributionList.size()) {
-            PSVGRequiredStart = 0;
+        if (FIT_DATA_START_INDEX > vgDegreeDistributionList.size()) {
+            fitDataStartIndex = 0;
             PSVGRequiredEnd = vgDegreeDistributionList.size();
         }
         for (int i = 0; i < vgDegreeDistributionList.size(); i++) {
-            if (i < PSVGRequiredStart) {
+            if (i < fitDataStartIndex) {
                 vgDegreeDistributionList.get(i).setIsRequired(false);
             } else if (i > PSVGRequiredEnd) {
                 vgDegreeDistributionList.get(i).setIsRequired(false);
@@ -243,7 +233,7 @@ public class VisibilityDegree {
             absExpectLogOfProbOfDegVal = Math.abs(expectLogOfProbOfDegVal);
             diffExpectedActual = Math.abs(expectLogOfProbOfDegVal - actualLogOfProbOfDegVal);
 
-            if (diffExpectedActual <= rejectCut) {
+            if (diffExpectedActual <= CHI_SQUARE_REJECT_CUT) {
                 squaredDiffDivExpected = (diffExpectedActual * diffExpectedActual) / absExpectLogOfProbOfDegVal;
 
                 sumOfSquaredDiffDivExpected = sumOfSquaredDiffDivExpected + squaredDiffDivExpected;
