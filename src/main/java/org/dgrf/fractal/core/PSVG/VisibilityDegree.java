@@ -16,21 +16,24 @@ import org.dgrf.fractal.db.DAO.VgadjacencyDAO;
 public class VisibilityDegree {
 
     private List<Double> InputTimeSeries;
-    //private ArrayList<Integer> visibilityOrder;
-    private List<VGDegreeDistribution> vgDegreeDistributionList;
     private int PSVGRequiredStart;
     private double PSVGDataPartFromStart;
+    private double rejectCut;
+    private boolean includePSVGInterCept;
+    private int maxNodesForCalc;
+    private String psvgResultsTermInstanceSlug;
+    
+    private List<VGDegreeDistribution> vgDegreeDistributionList;
+    
     private double PSVGIntercept;
     private double PSVGFractalDimension;
     private double PSVGFractalDimensionSE;
     private double PSVGInterceptSE;
     private double PSVGRSquared;
     private double PSVGChiSquareVal;
-    private double rejectCut;
-    private SimpleRegression PSVGRegSet;
-    private boolean includePSVGInterCept;
-    private int maxNodesForCalc;
-    private String psvgResultsTermInstanceSlug;
+    
+    
+    
 
     public VisibilityDegree(List<Double> InputTimeSeries, int PSVGRequiredStart, double PSVGDataPartFromStart,
             boolean includePSVGInterCept, int maxNodesForCalc, Double rejectCut, double logBase, String psvgResultsTermInstanceSlug) {
@@ -49,8 +52,6 @@ public class VisibilityDegree {
         return vgDegreeDistributionList;
     }
 
-   
-
     public double getPSVGIntercept() {
         return this.PSVGIntercept;
     }
@@ -61,8 +62,6 @@ public class VisibilityDegree {
 
     public void calculateVisibilityDegree() {
 
-        
-
         PSVGGraphStore.psvgresultsslug = psvgResultsTermInstanceSlug;
         PSVGGraphStore.createVisibilityGraphFile();
         //initializeDegree(InputTimeSeries);
@@ -71,13 +70,11 @@ public class VisibilityDegree {
         PSVGGraphStore.closeVisibilityGraphFile();
         PSVGGraphStore.storeVisibilityGraphInDB(DatabaseConnection.EMF);
         PSVGGraphStore.delVisibilityGraphFile();
-        calcPSVGList();
-        markPSVGoutliers(PSVGRequiredStart, PSVGDataPartFromStart);
+        createDegreeDistribution();
+        markOutliersOfDegreeDistribution(PSVGRequiredStart, PSVGDataPartFromStart);
 
-        setPSVGFractalDimension();
-        if (rejectCut > 0.0) {
-            calcPSVGChiSquareVal();
-        }
+        fitDegreeDistribution();
+        
         if (!psvgResultsTermInstanceSlug.contains(FractalConstants.TERM_INSTANCE_SLUG_IPSVG_EXT)) {
             VgadjacencyDAO vgadjacencyDAO = new VgadjacencyDAO(DatabaseConnection.EMF);
             vgadjacencyDAO.deleteVisibilityGraph(psvgResultsTermInstanceSlug);
@@ -97,13 +94,22 @@ public class VisibilityDegree {
 //        Logger.getLogger(VisibilityDegree.class.getName()).log(Level.INFO, "PSVG{0}x + {1}", new Object[]{PSVGFractalDimension, PSVGIntercept});
 //        
 //    }
-    public void setPSVGFractalDimension() {
-
+    public void fitDegreeDistribution() {
+        SimpleRegression PSVGRegSet = new SimpleRegression(includePSVGInterCept);
+        vgDegreeDistributionList.stream().forEach(vgd -> {
+            if (vgd.getIsRequired()) {
+                PSVGRegSet.addData(vgd.getLogOfDegVal(), vgd.getlogOfProbOfDegVal());
+            }
+        });
         PSVGIntercept = PSVGRegSet.getIntercept();
         PSVGFractalDimension = PSVGRegSet.getSlope();
         PSVGRSquared = PSVGRegSet.getRSquare();
         PSVGFractalDimensionSE = PSVGRegSet.getSlopeStdErr();
         PSVGInterceptSE = PSVGRegSet.getInterceptStdErr();
+        
+        if (rejectCut > 0.0) {
+            calcPSVGChiSquareVal(PSVGRegSet);
+        }
     }
 
 //    public void initializeDegree(List<Double> InputTimeSeries) {
@@ -119,7 +125,6 @@ public class VisibilityDegree {
 //        }
 //
 //    }
-
     private void createVGEdges() {
         int totalNodes = InputTimeSeries.size();
         if (InputTimeSeries.size() < maxNodesForCalc) {
@@ -130,14 +135,11 @@ public class VisibilityDegree {
             for (int currentNodeIndex = 0; currentNodeIndex < (totalNodes - nodeGap); currentNodeIndex++) {
                 int nodeToCompareIndex = currentNodeIndex + nodeGap;
 
-                if (nodeGap == 1) {
+                Boolean isVisible = checkVisibility(currentNodeIndex, nodeToCompareIndex);
+                if (isVisible) {
                     PSVGGraphStore.storeVisibilityGraphInFile(currentNodeIndex, nodeToCompareIndex);
-                } else {
-                    Boolean isVisible = checkVisibility(currentNodeIndex, nodeToCompareIndex);
-                    if (isVisible) {
-                        PSVGGraphStore.storeVisibilityGraphInFile(currentNodeIndex, nodeToCompareIndex);
-                    }
                 }
+
             }
         }
     }
@@ -149,14 +151,15 @@ public class VisibilityDegree {
 
         Double nodeToCompareXVal = Double.valueOf(nodeToCompareIndex);
         Double nodeToCompareYVal = InputTimeSeries.get(nodeToCompareIndex);
-        List<Double> seriesInBetween  = InputTimeSeries.subList(currentNodeIndex+1,nodeToCompareIndex);
-        for (int i=0;i<seriesInBetween.size();i++) {
-            Double inBetweenNodeXVal = Double.valueOf(currentNodeIndex+i+1);
+        List<Double> seriesInBetween = InputTimeSeries.subList(currentNodeIndex + 1, nodeToCompareIndex);
+        //মাঝখানের গ্যাপ যদি 1 হয় তাহলে এই লিস্টের সাইজ ০ হবে সেক্ষেত্রে এই লুপের মধ্যে না ঢুকেই ট্রু রিটার্ন করবে 
+        for (int i = 0; i < seriesInBetween.size(); i++) {
+            Double inBetweenNodeXVal = Double.valueOf(currentNodeIndex + i + 1);
             Double inBetweenNodeYVal = seriesInBetween.get(i);
-            
-            Double baseRatio = (inBetweenNodeXVal-currentNodeXVal)/(nodeToCompareXVal-currentNodeXVal);
-            Double inBetweenHeight = (baseRatio*(nodeToCompareYVal-currentNodeYVal))+currentNodeYVal;
-            
+
+            Double baseRatio = (inBetweenNodeXVal - currentNodeXVal) / (nodeToCompareXVal - currentNodeXVal);
+            Double inBetweenHeight = (baseRatio * (nodeToCompareYVal - currentNodeYVal)) + currentNodeYVal;
+
             if (inBetweenNodeYVal >= inBetweenHeight) {
                 return false;
             }
@@ -164,57 +167,8 @@ public class VisibilityDegree {
         return true;
     }
 
-//    public void iterateAndCalcDegree(List<Double> InputTimeSeries) {
-//        int nodeGap;
-//        int totalNodes = InputTimeSeries.size();
-//        if (InputTimeSeries.size() < maxNodesForCalc) {
-//            maxNodesForCalc = InputTimeSeries.size();
-//        }
-//        int currentNode;
-//        Double tempCurrentNode = 0.0;
-//        int nodeToCompare = 0;
-//        Double tempNodeToCompare = 0.0;
-//        int currNodePlusGap = 0;
-//        Double tempCurrNodePlusGap = 0.0;
-//        //Integer currNodeValue;
-//        Double comparedNodeValue;
-//        Double nodeSlope = 0.0;
-//        Double nodeToNodeDiff = 0.0;
-//        boolean isVisible = false;
-//
-//        for (nodeGap = 2; nodeGap < maxNodesForCalc; nodeGap++) {
-//            for (currentNode = 0; currentNode < (totalNodes - nodeGap); currentNode++) {
-//                currNodePlusGap = currentNode + nodeGap;
-//                isVisible = false;
-//
-//                for (nodeToCompare = (currentNode + 1); nodeToCompare < currNodePlusGap; nodeToCompare++) {
-//                    tempNodeToCompare = (double) nodeToCompare;
-//                    tempCurrentNode = (double) currentNode;
-//                    tempCurrNodePlusGap = (double) currNodePlusGap;
-//
-//                    nodeSlope = (tempCurrNodePlusGap - tempNodeToCompare) / (tempCurrNodePlusGap - tempCurrentNode);
-//                    nodeToNodeDiff = InputTimeSeries.get(currentNode) - InputTimeSeries.get(currNodePlusGap);
-//                    comparedNodeValue = InputTimeSeries.get(currNodePlusGap) + nodeSlope * nodeToNodeDiff;
-//
-//                    if (InputTimeSeries.get(nodeToCompare) < comparedNodeValue) {
-//
-//                        isVisible = true;
-//                    } else {
-//                        isVisible = false;
-//                        break;
-//                    }
-//                }
-//                if (isVisible) {
-//
-//                    PSVGGraphStore.storeVisibilityGraphInFile(currentNode, currNodePlusGap);
-//                }
-//            }
-//
-//        }
-//
-//    }
 
-    public void calcPSVGList() {
+    public void createDegreeDistribution() {
 
         VgadjacencyDAO vgadjacencyDAO = new VgadjacencyDAO(DatabaseConnection.EMF);
         Map<Integer, Integer> nodesAndDegreeMap = vgadjacencyDAO.getNodeCountsforDegree(psvgResultsTermInstanceSlug);
@@ -229,13 +183,13 @@ public class VisibilityDegree {
             PSVGDet.setProbOfDegVal(probOfDegVal);
             PSVGDet.setIsRequired(true);
             return PSVGDet;
-        }).sorted(Comparator.comparing(m->m.getDegValue())).collect(Collectors.toList());
-        //}).collect(Collectors.toList()).stream().sorted(Comparator.comparing(m->m.getDegValue())).collect(Collectors.toList());
+        }).sorted(Comparator.comparing(m -> m.getDegValue())).collect(Collectors.toList());
+        
 
     }
 
-    public void markPSVGoutliers(int PSVGRequiredStart, double PSVGDataPartFromStart) {
-        PSVGRegSet = new SimpleRegression(includePSVGInterCept);
+    public void markOutliersOfDegreeDistribution(int PSVGRequiredStart, double PSVGDataPartFromStart) {
+        
 
         int PSVGRequiredEnd = (int) ((int) vgDegreeDistributionList.size() * PSVGDataPartFromStart);
         /*
@@ -254,9 +208,7 @@ public class VisibilityDegree {
                 vgDegreeDistributionList.get(i).setIsRequired(false);
             } else if (i > PSVGRequiredEnd) {
                 vgDegreeDistributionList.get(i).setIsRequired(false);
-            } else {
-                PSVGRegSet.addData(vgDegreeDistributionList.get(i).getLogOfDegVal(), vgDegreeDistributionList.get(i).getlogOfProbOfDegVal());
-            }
+            } 
         }
     }
 
@@ -274,7 +226,7 @@ public class VisibilityDegree {
         return PSVGInterceptSE;
     }
 
-    public void calcPSVGChiSquareVal() {
+    private void calcPSVGChiSquareVal(SimpleRegression PSVGRegSet) {
 
         int listSize = 0;
         Double expectLogOfProbOfDegVal = 0.0;
