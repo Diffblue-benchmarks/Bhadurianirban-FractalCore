@@ -1,117 +1,20 @@
 package org.dgrf.fractal.core.PSVG;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import javax.persistence.EntityManager;
-
-import org.apache.commons.math3.stat.regression.SimpleRegression;
-import org.dgrf.fractal.constants.FractalConstants;
-import org.dgrf.fractal.core.util.DatabaseConnection;
-import org.dgrf.fractal.core.util.LogUtil;
-import org.dgrf.fractal.db.DAO.VgadjacencyDAO;
-import org.dgrf.fractal.db.entities.Vgadjacency;
 
 
-public class VisibilityDegree {
+public class VisibilityDegree extends VisibilityGraph{
 
-    private final List<Double> InputTimeSeries;
-    private final int FIT_DATA_START_INDEX;
-    private final double FIT_DATA_PART_FROM_START;
-    private final double CHI_SQUARE_REJECT_CUT;
-    private final boolean FIT_INCLUDE_INTERCEPT;
-    private final int MAX_NODES_FOR_CALC;
-    private final String PSVG_RESULTS_TERM_INSTANCE_SLUG;
-
-    private List<VGDegreeDistribution> vgDegreeDistributionList;
-
-    private double PSVGIntercept;
-    private double PSVGFractalDimension;
-    private double PSVGFractalDimensionSE;
-    private double PSVGInterceptSE;
-    private double PSVGRSquared;
-    private double PSVGChiSquareVal;
-
-    private EntityManager em;
-    private int rowCount;
-    public VisibilityDegree(List<Double> InputTimeSeries, int PSVGRequiredStart, double PSVGDataPartFromStart,
-            boolean includePSVGInterCept, int maxNodesForCalc, Double rejectCut, double logBase, String psvgResultsTermInstanceSlug) {
-        this.InputTimeSeries = InputTimeSeries;
-        this.FIT_DATA_START_INDEX = PSVGRequiredStart;
-        this.FIT_DATA_PART_FROM_START = PSVGDataPartFromStart;
-        this.FIT_INCLUDE_INTERCEPT = includePSVGInterCept;
-        this.MAX_NODES_FOR_CALC = maxNodesForCalc;
-        this.CHI_SQUARE_REJECT_CUT = rejectCut;
-        LogUtil.setLogBase(logBase);
-        this.PSVG_RESULTS_TERM_INSTANCE_SLUG = psvgResultsTermInstanceSlug;
-
+    public VisibilityDegree(List<?> InputTimeSeries, int PSVGRequiredStart, double PSVGDataPartFromStart, boolean includePSVGInterCept, int maxNodesForCalc, Double rejectCut, double logBase, String psvgResultsTermInstanceSlug) {
+        super(InputTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, rejectCut, logBase, psvgResultsTermInstanceSlug);
     }
 
-    public List<VGDegreeDistribution> getVgDegreeDistributionList() {
-        return vgDegreeDistributionList;
-    }
+    
+    
 
-    public double getPSVGIntercept() {
-        return this.PSVGIntercept;
-    }
+    
 
-    public double getPSVGFractalDimension() {
-        return this.PSVGFractalDimension;
-    }
-
-    public void calculateVisibilityDegree() {
-
-        //PSVGGraphStore.psvgresultsslug = PSVG_RESULTS_TERM_INSTANCE_SLUG;
-        //PSVGGraphStore.createVisibilityGraphFile();
-        
-        VgadjacencyDAO vgadjacencyDAO = new VgadjacencyDAO(DatabaseConnection.EMF);
-        vgadjacencyDAO.deleteVisibilityGraph(PSVG_RESULTS_TERM_INSTANCE_SLUG);
-        em = vgadjacencyDAO.getEntityManager();
-        em.getTransaction().begin();
-        rowCount=0;
-        
-        createVGEdges();
-
-        em.flush();
-        em.clear();
-        em.getTransaction().commit();
-        //PSVGGraphStore.closeVisibilityGraphFile();
-        //PSVGGraphStore.storeVisibilityGraphInDB(DatabaseConnection.EMF);
-        //PSVGGraphStore.delVisibilityGraphFile();
-
-        createDegreeDistribution();
-        markOutliersOfDegreeDistribution();
-        fitDegreeDistribution();
-
-        if (PSVG_RESULTS_TERM_INSTANCE_SLUG.contains(FractalConstants.TERM_INSTANCE_SLUG_IPSVG_EXT)) {
-            
-            vgadjacencyDAO.deleteVisibilityGraph(PSVG_RESULTS_TERM_INSTANCE_SLUG);
-        }
-
-    }
-
-    private void fitDegreeDistribution() {
-        SimpleRegression PSVGRegSet = new SimpleRegression(FIT_INCLUDE_INTERCEPT);
-        vgDegreeDistributionList.stream().forEach(vgd -> {
-            if (vgd.getIsRequired()) {
-                PSVGRegSet.addData(vgd.getLogOfDegVal(), vgd.getlogOfProbOfDegVal());
-            }
-        });
-        PSVGIntercept = PSVGRegSet.getIntercept();
-        PSVGFractalDimension = PSVGRegSet.getSlope();
-        PSVGRSquared = PSVGRegSet.getRSquare();
-        PSVGFractalDimensionSE = PSVGRegSet.getSlopeStdErr();
-        PSVGInterceptSE = PSVGRegSet.getInterceptStdErr();
-
-        if (CHI_SQUARE_REJECT_CUT > 0.0) {
-            calcPSVGChiSquareVal(PSVGRegSet);
-        }
-    }
-
-    private void createVGEdges() {
+     void createVGEdges() {
         int totalNodes = InputTimeSeries.size();
         int maxNodesForCalc = MAX_NODES_FOR_CALC;
         if (InputTimeSeries.size() < MAX_NODES_FOR_CALC) {
@@ -132,35 +35,20 @@ public class VisibilityDegree {
         }
     }
 
-    private void insertNewEdge(int node, int adjnode) {
-        //VgadjacencyPK vgadjacencyPK = new VgadjacencyPK(PSVG_RESULTS_TERM_INSTANCE_SLUG, node, adjnode);
-        Vgadjacency vgadjacency = new Vgadjacency(PSVG_RESULTS_TERM_INSTANCE_SLUG, node, adjnode);
-        try {
-            em.persist(vgadjacency);
-            if (rowCount % 3000 == 0) {
-                //System.out.println("Committing " + rowCount);
-                em.flush();
-                em.clear();
+   
 
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(VisibilityDegree.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        rowCount++;
-    }
-
-    private Boolean checkVisibility(int currentNodeIndex, int nodeToCompareIndex) {
+     Boolean checkVisibility(int currentNodeIndex, int nodeToCompareIndex) {
 
         Double currentNodeXVal = Double.valueOf(currentNodeIndex);
-        Double currentNodeYVal = InputTimeSeries.get(currentNodeIndex);
+        Double currentNodeYVal = (Double)InputTimeSeries.get(currentNodeIndex);
 
-        Double nodeToCompareXVal = Double.valueOf(nodeToCompareIndex);
-        Double nodeToCompareYVal = InputTimeSeries.get(nodeToCompareIndex);
-        List<Double> seriesInBetween = InputTimeSeries.subList(currentNodeIndex + 1, nodeToCompareIndex);
+        Double nodeToCompareXVal = (Double)Double.valueOf(nodeToCompareIndex);
+        Double nodeToCompareYVal = (Double)InputTimeSeries.get(nodeToCompareIndex);
+        List<?> seriesInBetween = InputTimeSeries.subList(currentNodeIndex + 1, nodeToCompareIndex);
         //মাঝখানের গ্যাপ যদি 1 হয় তাহলে এই লিস্টের সাইজ ০ হবে সেক্ষেত্রে এই লুপের মধ্যে না ঢুকেই ট্রু রিটার্ন করবে 
         for (int i = 0; i < seriesInBetween.size(); i++) {
             Double inBetweenNodeXVal = Double.valueOf(currentNodeIndex + i + 1);
-            Double inBetweenNodeYVal = seriesInBetween.get(i);
+            Double inBetweenNodeYVal = (Double)seriesInBetween.get(i);
 
             Double baseRatio = (inBetweenNodeXVal - currentNodeXVal) / (nodeToCompareXVal - currentNodeXVal);
             Double inBetweenHeight = (baseRatio * (nodeToCompareYVal - currentNodeYVal)) + currentNodeYVal;
@@ -172,109 +60,8 @@ public class VisibilityDegree {
         return true;
     }
 
-    public void createDegreeDistribution() {
+    
 
-        VgadjacencyDAO vgadjacencyDAO = new VgadjacencyDAO(DatabaseConnection.EMF);
-        Map<Integer, Integer> nodesAndDegreeMap = vgadjacencyDAO.getNodeCountsforDegree(PSVG_RESULTS_TERM_INSTANCE_SLUG);
-        int totalNodes = nodesAndDegreeMap.size();
-        vgDegreeDistributionList = nodesAndDegreeMap.entrySet().stream().filter(nd -> nd.getValue() > 0).map(nd -> {
-            VGDegreeDistribution PSVGDet = new VGDegreeDistribution();
-            int degreeVal = nd.getKey();
-            int degreeValCount = nd.getValue();
-            PSVGDet.setDegValue(degreeVal);
-            PSVGDet.setNumOfNodesWithDegVal(degreeValCount);
-            float probOfDegVal = (float) degreeValCount / totalNodes;
-            PSVGDet.setProbOfDegVal(probOfDegVal);
-            PSVGDet.setIsRequired(true);
-            return PSVGDet;
-        }).sorted(Comparator.comparing(m -> m.getDegValue())).collect(Collectors.toList());
+    
 
-    }
-
-    public void markOutliersOfDegreeDistribution() {
-
-        int PSVGRequiredEnd = (int) ((int) vgDegreeDistributionList.size() * FIT_DATA_PART_FROM_START);
-        /*
-		 * We need at least 4 data points to fit and find the PSVG gradient.
-         */
-        int fitDataStartIndex = FIT_DATA_START_INDEX;
-        if (PSVGRequiredEnd < (FIT_DATA_START_INDEX + 4)) {
-            fitDataStartIndex = 0;
-            PSVGRequiredEnd = vgDegreeDistributionList.size();
-        }
-        if (FIT_DATA_START_INDEX > vgDegreeDistributionList.size()) {
-            fitDataStartIndex = 0;
-            PSVGRequiredEnd = vgDegreeDistributionList.size();
-        }
-        for (int i = 0; i < vgDegreeDistributionList.size(); i++) {
-            if (i < fitDataStartIndex) {
-                vgDegreeDistributionList.get(i).setIsRequired(false);
-            } else if (i > PSVGRequiredEnd) {
-                vgDegreeDistributionList.get(i).setIsRequired(false);
-            }
-        }
-    }
-
-    /**
-     * @return the pSVGFractalDimensionSE
-     */
-    public double getPSVGFractalDimensionSE() {
-        return PSVGFractalDimensionSE;
-    }
-
-    /**
-     * @return the pSVGInterceptSE
-     */
-    public double getPSVGInterceptSE() {
-        return PSVGInterceptSE;
-    }
-
-    private void calcPSVGChiSquareVal(SimpleRegression PSVGRegSet) {
-
-        int listSize = 0;
-        Double expectLogOfProbOfDegVal = 0.0;
-        Double actualLogOfProbOfDegVal = 0.0;
-        Double diffExpectedActual = 0.0;
-        Double absExpectLogOfProbOfDegVal = 0.0;
-        Double squaredDiffDivExpected = 0.0;
-        Double sumOfSquaredDiffDivExpected = 0.0;
-
-        for (int i = 0; i < vgDegreeDistributionList.size(); i++) {
-
-            expectLogOfProbOfDegVal = PSVGRegSet.predict(vgDegreeDistributionList.get(i).getLogOfDegVal());
-            actualLogOfProbOfDegVal = vgDegreeDistributionList.get(i).getlogOfProbOfDegVal();
-            absExpectLogOfProbOfDegVal = Math.abs(expectLogOfProbOfDegVal);
-            diffExpectedActual = Math.abs(expectLogOfProbOfDegVal - actualLogOfProbOfDegVal);
-
-            if (diffExpectedActual <= CHI_SQUARE_REJECT_CUT) {
-                squaredDiffDivExpected = (diffExpectedActual * diffExpectedActual) / absExpectLogOfProbOfDegVal;
-
-                sumOfSquaredDiffDivExpected = sumOfSquaredDiffDivExpected + squaredDiffDivExpected;
-                listSize++;
-            }
-        }
-
-        if (listSize < 3) {
-            Logger.getLogger(VisibilityDegree.class.getName()).log(Level.SEVERE, "Chi square could not be calculated");
-
-            PSVGChiSquareVal = 999.0;
-        }
-        int degFreedom = listSize - 2;//2 is because there are expected and actual is for 2
-        PSVGChiSquareVal = sumOfSquaredDiffDivExpected / degFreedom;
-
-    }
-
-    /**
-     * @return the pSVGChiSquareVal
-     */
-    public double getPSVGChiSquareVal() {
-        return PSVGChiSquareVal;
-    }
-
-    /**
-     * @return the pSVGRSquared
-     */
-    public double getPSVGRSquared() {
-        return PSVGRSquared;
-    }
 }
