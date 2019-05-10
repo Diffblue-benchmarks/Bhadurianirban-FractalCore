@@ -152,7 +152,7 @@ public class PSVGCalcService {
         psvgCalcResults.put(PSVGResultsMeta.QUEUED, "No");
         psvgCalcResults.put(CMSConstants.TERM_SLUG, FractalConstants.TERM_SLUG_PSVG_CALC);
         psvgCalcResults.put(CMSConstants.TERM_INSTANCE_SLUG, psvgResultsTermInstanceSlug);
-        PSVGGraphStore.psvgresultsslug = psvgResultsTermInstanceSlug;
+        //.psvgresultsslug = psvgResultsTermInstanceSlug;
         int response = storePSVGResults(psvgResultsTermInstanceSlug, vgDegreeDistributionList);
         if (response != FractalResponseCode.SUCCESS) {
             return null;
@@ -179,19 +179,19 @@ public class PSVGCalcService {
         String psvgResultsTermInstanceSlug = selectedDataSeries.get(CMSConstants.TERM_INSTANCE_SLUG) + FractalConstants.TERM_INSTANCE_SLUG_PSVG_EXT + FractalConstants.PSVG_CALC_TYPE_H;
         //write VG in file.
         //open temp VG in file.
-        PSVGGraphStore.psvgresultsslug = psvgResultsTermInstanceSlug;
-        PSVGGraphStore.createVisibilityGraphFile();
+        //PSVGGraphStore.psvgresultsslug = psvgResultsTermInstanceSlug;
+        //PSVGGraphStore.createVisibilityGraphFile();
         //initialise VG Calculation
 
-        hVisibilityDegree hvisDegree = new hVisibilityDegree(InputTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, logBase);
+        hVisibilityDegree hvisDegree = new hVisibilityDegree(InputTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, rejectCut, logBase,psvgResultsTermInstanceSlug);
         hvisDegree.calculateVisibilityDegree();
         //close  temp VG in file.
-        PSVGGraphStore.closeVisibilityGraphFile();
+        //PSVGGraphStore.closeVisibilityGraphFile();
         //store the Graph in table as adjacency list
-        PSVGGraphStore.storeVisibilityGraphInDB(DatabaseConnection.EMF);
+        //PSVGGraphStore.storeVisibilityGraphInDB(DatabaseConnection.EMF);
         //delete temp VG in file.
-        PSVGGraphStore.delVisibilityGraphFile();
-        PSVGDetailsList = hvisDegree.getPSVGList();
+        //PSVGGraphStore.delVisibilityGraphFile();
+        PSVGDetailsList = hvisDegree.getVgDegreeDistributionList();
         PSVGIntercept = hvisDegree.getPSVGIntercept();
         PSVGFractalDimension = hvisDegree.getPSVGFractalDimension();
 
@@ -268,7 +268,7 @@ public class PSVGCalcService {
         psvgCalcResults.put(PSVGResultsMeta.QUEUED, "No");
         psvgCalcResults.put(CMSConstants.TERM_SLUG, FractalConstants.TERM_SLUG_PSVG_CALC);
         psvgCalcResults.put(CMSConstants.TERM_INSTANCE_SLUG, psvgResultsTermInstanceSlug);
-        PSVGGraphStore.psvgresultsslug = psvgResultsTermInstanceSlug;
+        //.psvgresultsslug = psvgResultsTermInstanceSlug;
         int response = storePSVGResults(psvgResultsTermInstanceSlug, PSVGDetailsList);
         if (response != FractalResponseCode.SUCCESS) {
             return null;
