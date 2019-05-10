@@ -17,7 +17,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  *
- * @author bhaduri
+ * @author dgrfi
  */
 @Entity
 @Table(name = "ipsvgresults")
@@ -99,7 +99,7 @@ public class Ipsvgresults implements Serializable {
 
     @Override
     public String toString() {
-        return "org.dgrf.db.entities.Ipsvgresults[ ipsvgresultsPK=" + ipsvgresultsPK + " ]";
+        return "org.dgrf.fractal.db.entities.Ipsvgresults[ ipsvgresultsPK=" + ipsvgresultsPK + " ]";
     }
     
 }

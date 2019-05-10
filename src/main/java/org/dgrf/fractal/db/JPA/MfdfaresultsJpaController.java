@@ -20,7 +20,7 @@ import org.dgrf.fractal.db.entities.MfdfaresultsPK;
 
 /**
  *
- * @author bhaduri
+ * @author dgrfi
  */
 public class MfdfaresultsJpaController implements Serializable {
 

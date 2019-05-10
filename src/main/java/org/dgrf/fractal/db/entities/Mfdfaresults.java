@@ -17,7 +17,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  *
- * @author bhaduri
+ * @author dgrfi
  */
 @Entity
 @Table(name = "mfdfaresults")
@@ -99,7 +99,7 @@ public class Mfdfaresults implements Serializable {
 
     @Override
     public String toString() {
-        return "org.dgrf.db.entities.Mfdfaresults[ mfdfaresultsPK=" + mfdfaresultsPK + " ]";
+        return "org.dgrf.fractal.db.entities.Mfdfaresults[ mfdfaresultsPK=" + mfdfaresultsPK + " ]";
     }
     
 }

@@ -16,7 +16,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  *
- * @author bhaduri
+ * @author dgrfi
  */
 @Entity
 @Table(name = "psvgresults")
@@ -131,7 +131,7 @@ public class Psvgresults implements Serializable {
 
     @Override
     public String toString() {
-        return "org.dgrf.db.entities.Psvgresults[ psvgresultsPK=" + psvgresultsPK + " ]";
+        return "org.dgrf.fractal.db.entities.Psvgresults[ psvgresultsPK=" + psvgresultsPK + " ]";
     }
     
 }

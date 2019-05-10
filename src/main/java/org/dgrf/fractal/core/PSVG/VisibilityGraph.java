@@ -89,9 +89,9 @@ abstract class VisibilityGraph {
         }
 
     }
-    protected void insertNewEdge(int node, int adjnode) {
+    protected void insertNewEdge(Vgadjacency vgadjacency) {
         //VgadjacencyPK vgadjacencyPK = new VgadjacencyPK(PSVG_RESULTS_TERM_INSTANCE_SLUG, node, adjnode);
-        Vgadjacency vgadjacency = new Vgadjacency(PSVG_RESULTS_TERM_INSTANCE_SLUG, node, adjnode);
+        
         try {
             em.persist(vgadjacency);
             if (rowCount % 3000 == 0) {
@@ -200,6 +200,15 @@ abstract class VisibilityGraph {
             return PSVGDet;
         }).sorted(Comparator.comparing(m -> m.getDegValue())).collect(Collectors.toList());
 
+    }
+    protected Vgadjacency createEdge(int currentNodeIndex, int nodeToCompareIndex, Double currentNodeXVal,Double currentNodeYVal,Double nodeToCompareXVal,Double nodeToCompareYVal ) {
+        Vgadjacency vgadjacency = new Vgadjacency(PSVG_RESULTS_TERM_INSTANCE_SLUG, currentNodeIndex, nodeToCompareIndex);
+        Double baseOfTriangle = nodeToCompareXVal -currentNodeXVal;
+        Double heightOfTriangle = nodeToCompareYVal -currentNodeYVal;
+        Double realLength = Math.sqrt(baseOfTriangle*baseOfTriangle + heightOfTriangle*heightOfTriangle);
+        vgadjacency.setHedgelength(baseOfTriangle);
+        vgadjacency.setRealedgelength(realLength);
+        return vgadjacency;
     }
 
     public List<VGDegreeDistribution> getVgDegreeDistributionList() {

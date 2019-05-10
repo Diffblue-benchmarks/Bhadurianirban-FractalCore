@@ -20,7 +20,7 @@ import org.dgrf.fractal.db.entities.VgadjacencyPK;
 
 /**
  *
- * @author bhaduri
+ * @author dgrfi
  */
 public class VgadjacencyJpaController implements Serializable {
 

@@ -17,7 +17,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  *
- * @author bhaduri
+ * @author dgrfi
  */
 @Entity
 @Table(name = "dataseries")
@@ -135,7 +135,7 @@ public class Dataseries implements Serializable {
 
     @Override
     public String toString() {
-        return "org.dgrf.db.entities.Dataseries[ dataseriesPK=" + dataseriesPK + " ]";
+        return "org.dgrf.fractal.db.entities.Dataseries[ dataseriesPK=" + dataseriesPK + " ]";
     }
     
 }

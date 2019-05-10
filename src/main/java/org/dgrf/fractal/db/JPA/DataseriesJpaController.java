@@ -20,7 +20,7 @@ import org.dgrf.fractal.db.entities.DataseriesPK;
 
 /**
  *
- * @author bhaduri
+ * @author dgrfi
  */
 public class DataseriesJpaController implements Serializable {
 

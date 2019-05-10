@@ -12,7 +12,7 @@ import javax.persistence.Embeddable;
 
 /**
  *
- * @author bhaduri
+ * @author dgrfi
  */
 @Embeddable
 public class DataseriesPK implements Serializable {
@@ -74,7 +74,7 @@ public class DataseriesPK implements Serializable {
 
     @Override
     public String toString() {
-        return "org.dgrf.db.entities.DataseriesPK[ seriesid=" + seriesid + ", dataindex=" + dataindex + " ]";
+        return "org.dgrf.fractal.db.entities.DataseriesPK[ seriesid=" + seriesid + ", dataindex=" + dataindex + " ]";
     }
     
 }

@@ -6,6 +6,8 @@
 package org.dgrf.fractal.db.entities;
 
 import java.io.Serializable;
+import javax.persistence.Basic;
+import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.NamedQueries;
@@ -15,7 +17,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  *
- * @author bhaduri
+ * @author dgrfi
  */
 @Entity
 @Table(name = "vgadjacency")
@@ -27,12 +29,24 @@ public class Vgadjacency implements Serializable {
     private static final long serialVersionUID = 1L;
     @EmbeddedId
     protected VgadjacencyPK vgadjacencyPK;
+    @Basic(optional = false)
+    @Column(name = "hedgelength")
+    private double hedgelength;
+    @Basic(optional = false)
+    @Column(name = "realedgelength")
+    private double realedgelength;
 
     public Vgadjacency() {
     }
 
     public Vgadjacency(VgadjacencyPK vgadjacencyPK) {
         this.vgadjacencyPK = vgadjacencyPK;
+    }
+
+    public Vgadjacency(VgadjacencyPK vgadjacencyPK, double hedgelength, double realedgelength) {
+        this.vgadjacencyPK = vgadjacencyPK;
+        this.hedgelength = hedgelength;
+        this.realedgelength = realedgelength;
     }
 
     public Vgadjacency(String psvgresultsslug, int node, int adjnode) {
@@ -45,6 +59,22 @@ public class Vgadjacency implements Serializable {
 
     public void setVgadjacencyPK(VgadjacencyPK vgadjacencyPK) {
         this.vgadjacencyPK = vgadjacencyPK;
+    }
+
+    public double getHedgelength() {
+        return hedgelength;
+    }
+
+    public void setHedgelength(double hedgelength) {
+        this.hedgelength = hedgelength;
+    }
+
+    public double getRealedgelength() {
+        return realedgelength;
+    }
+
+    public void setRealedgelength(double realedgelength) {
+        this.realedgelength = realedgelength;
     }
 
     @Override
@@ -69,7 +99,7 @@ public class Vgadjacency implements Serializable {
 
     @Override
     public String toString() {
-        return "org.dgrf.db.entities.Vgadjacency[ vgadjacencyPK=" + vgadjacencyPK + " ]";
+        return "org.dgrf.fractal.db.entities.Vgadjacency[ vgadjacencyPK=" + vgadjacencyPK + " ]";
     }
     
 }

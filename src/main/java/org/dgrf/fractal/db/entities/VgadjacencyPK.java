@@ -12,7 +12,7 @@ import javax.persistence.Embeddable;
 
 /**
  *
- * @author bhaduri
+ * @author dgrfi
  */
 @Embeddable
 public class VgadjacencyPK implements Serializable {
@@ -90,7 +90,7 @@ public class VgadjacencyPK implements Serializable {
 
     @Override
     public String toString() {
-        return "org.dgrf.db.entities.VgadjacencyPK[ psvgresultsslug=" + psvgresultsslug + ", node=" + node + ", adjnode=" + adjnode + " ]";
+        return "org.dgrf.fractal.db.entities.VgadjacencyPK[ psvgresultsslug=" + psvgresultsslug + ", node=" + node + ", adjnode=" + adjnode + " ]";
     }
     
 }

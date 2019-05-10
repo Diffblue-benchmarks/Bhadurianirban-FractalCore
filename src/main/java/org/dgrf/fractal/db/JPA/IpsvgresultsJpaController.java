@@ -20,7 +20,7 @@ import org.dgrf.fractal.db.entities.IpsvgresultsPK;
 
 /**
  *
- * @author bhaduri
+ * @author dgrfi
  */
 public class IpsvgresultsJpaController implements Serializable {
 
