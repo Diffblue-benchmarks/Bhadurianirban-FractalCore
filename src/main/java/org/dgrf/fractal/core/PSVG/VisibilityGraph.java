@@ -44,7 +44,7 @@ abstract class VisibilityGraph {
 
     private EntityManager em;
     private int rowCount;
-
+    
     public VisibilityGraph(List<?> InputTimeSeries, int PSVGRequiredStart, double PSVGDataPartFromStart,
             boolean includePSVGInterCept, int maxNodesForCalc, Double rejectCut, double logBase, String psvgResultsTermInstanceSlug) {
         this.InputTimeSeries = InputTimeSeries;
@@ -57,6 +57,7 @@ abstract class VisibilityGraph {
         this.PSVG_RESULTS_TERM_INSTANCE_SLUG = psvgResultsTermInstanceSlug;
 
     }
+    abstract Vgadjacency checkVisibility(int currentNodeIndex, int nodeToCompareIndex);
      protected void createVGEdges() {
         int totalNodes = InputTimeSeries.size();
         int maxNodesForCalc = MAX_NODES_FOR_CALC;
@@ -77,7 +78,7 @@ abstract class VisibilityGraph {
             }
         }
     }
-    abstract Vgadjacency checkVisibility(int currentNodeIndex, int nodeToCompareIndex);
+    
     public void calculateVisibilityDegree() {
 
         //PSVGGraphStore.psvgresultsslug = PSVG_RESULTS_TERM_INSTANCE_SLUG;
@@ -120,7 +121,7 @@ abstract class VisibilityGraph {
 
             }
         } catch (Exception ex) {
-            Logger.getLogger(VisibilityDegree.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(VisibilityGraphUniformTS.class.getName()).log(Level.SEVERE, null, ex);
         }
         rowCount++;
     }
@@ -169,7 +170,7 @@ abstract class VisibilityGraph {
         }
 
         if (listSize < 3) {
-            Logger.getLogger(VisibilityDegree.class.getName()).log(Level.SEVERE, "Chi square could not be calculated");
+            Logger.getLogger(VisibilityGraphUniformTS.class.getName()).log(Level.SEVERE, "Chi square could not be calculated");
 
             PSVGChiSquareVal = 999.0;
         }
@@ -178,7 +179,7 @@ abstract class VisibilityGraph {
 
     }
 
-    public void markOutliersOfDegreeDistribution() {
+    private void markOutliersOfDegreeDistribution() {
 
         int PSVGRequiredEnd = (int) ((int) vgDegreeDistributionList.size() * FIT_DATA_PART_FROM_START);
         /*
@@ -202,7 +203,7 @@ abstract class VisibilityGraph {
         }
     }
     
-    public void createDegreeDistribution() {
+    private void createDegreeDistribution() {
 
         VgadjacencyDAO vgadjacencyDAO = new VgadjacencyDAO(DatabaseConnection.EMF);
         Map<Integer, Integer> nodesAndDegreeMap = vgadjacencyDAO.getNodeCountsforDegree(PSVG_RESULTS_TERM_INSTANCE_SLUG);

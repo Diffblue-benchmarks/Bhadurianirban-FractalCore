@@ -3,9 +3,9 @@ package org.dgrf.fractal.core.PSVG;
 import java.util.List;
 import org.dgrf.fractal.db.entities.Vgadjacency;
 
-public class VisibilityDegree extends VisibilityGraph {
+public class VisibilityGraphUniformTS extends VisibilityGraph {
 
-    public VisibilityDegree(List<?> InputTimeSeries, int PSVGRequiredStart, double PSVGDataPartFromStart, boolean includePSVGInterCept, int maxNodesForCalc, Double rejectCut, double logBase, String psvgResultsTermInstanceSlug) {
+    public VisibilityGraphUniformTS(List<?> InputTimeSeries, int PSVGRequiredStart, double PSVGDataPartFromStart, boolean includePSVGInterCept, int maxNodesForCalc, Double rejectCut, double logBase, String psvgResultsTermInstanceSlug) {
         super(InputTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, rejectCut, logBase, psvgResultsTermInstanceSlug);
     }
 
@@ -30,7 +30,6 @@ public class VisibilityDegree extends VisibilityGraph {
 //            }
 //        }
 //    }
-
     @Override
     Vgadjacency checkVisibility(int currentNodeIndex, int nodeToCompareIndex) {
 
@@ -39,11 +38,13 @@ public class VisibilityDegree extends VisibilityGraph {
 
         Double nodeToCompareXVal = Double.valueOf(nodeToCompareIndex);
         Double nodeToCompareYVal = (Double) InputTimeSeries.get(nodeToCompareIndex);
-        List<?> seriesInBetween = InputTimeSeries.subList(currentNodeIndex + 1, nodeToCompareIndex);
+        int inBetweenStartIndex = currentNodeIndex + 1;
+        int inBetweenEndIndex = nodeToCompareIndex;
+        //List<?> seriesInBetween = InputTimeSeries.subList(currentNodeIndex + 1, nodeToCompareIndex);
         //মাঝখানের গ্যাপ যদি 1 হয় তাহলে এই লিস্টের সাইজ ০ হবে সেক্ষেত্রে এই লুপের মধ্যে না ঢুকেই ট্রু রিটার্ন করবে 
-        for (int i = 0; i < seriesInBetween.size(); i++) {
-            Double inBetweenNodeXVal = Double.valueOf(currentNodeIndex + i + 1);
-            Double inBetweenNodeYVal = (Double) seriesInBetween.get(i);
+        for (int i = inBetweenStartIndex; i < inBetweenEndIndex; i++) {
+            Double inBetweenNodeXVal = Double.valueOf(i);
+            Double inBetweenNodeYVal = (Double) InputTimeSeries.get(i);
 
             Double baseRatio = (inBetweenNodeXVal - currentNodeXVal) / (nodeToCompareXVal - currentNodeXVal);
             Double inBetweenHeight = (baseRatio * (nodeToCompareYVal - currentNodeYVal)) + currentNodeYVal;

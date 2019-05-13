@@ -7,7 +7,7 @@ package org.dgrf.fractal.core.IPSVG;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.dgrf.fractal.core.PSVG.VisibilityDegree;
+import org.dgrf.fractal.core.PSVG.VisibilityGraphUniformTS;
 import org.dgrf.fractal.core.util.TimeSeriesUtil;
 
 /**
@@ -53,7 +53,7 @@ public class ImpVisibilityDegree {
         Double[] PSVGofBrokenTS = new Double[maxGap];
         for (int gapCounter = 0; gapCounter < maxGap; gapCounter++) {
             List<Double> brokenTimeSeries = TimeSeriesUtil.getGappedTimeSeries(InputTimeSeries, gapCounter + 1);
-            VisibilityDegree visDegree = new VisibilityDegree(brokenTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, 0.0, logBase,psvgResultsTermInstanceSlug);
+            VisibilityGraphUniformTS visDegree = new VisibilityGraphUniformTS(brokenTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, 0.0, logBase,psvgResultsTermInstanceSlug);
             visDegree.calculateVisibilityDegree();
             PSVGofBrokenTS[gapCounter] = visDegree.getPSVGFractalDimension();
         }

@@ -118,12 +118,8 @@ public class PSVGCalcService {
         Double PSVGIntercept, PSVGFractalDimension, PSVGInterceptSE, PSVGFractalDimensionSE, PSVGChiSquareVal, PSVGRSquared;
 
         List<Double> InputTimeSeries = dataSeriesDao.getDataSeriesYvalPosById(dataseriesId);
-        //write VG in file.
-        //open temp VG in file.
-       
         
-        //initialise VG Calculation
-        VisibilityDegree visDegree = new VisibilityDegree(InputTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, rejectCut, logBase,psvgResultsTermInstanceSlug);
+        VisibilityGraphUniformTS visDegree = new VisibilityGraphUniformTS(InputTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, rejectCut, logBase,psvgResultsTermInstanceSlug);
         visDegree.calculateVisibilityDegree();
         //close  temp VG in file.
         
@@ -183,7 +179,7 @@ public class PSVGCalcService {
         //PSVGGraphStore.createVisibilityGraphFile();
         //initialise VG Calculation
 
-        hVisibilityDegree hvisDegree = new hVisibilityDegree(InputTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, rejectCut, logBase,psvgResultsTermInstanceSlug);
+        VisibilityGraphHorizontal hvisDegree = new VisibilityGraphHorizontal(InputTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, rejectCut, logBase,psvgResultsTermInstanceSlug);
         hvisDegree.calculateVisibilityDegree();
         //close  temp VG in file.
         //PSVGGraphStore.closeVisibilityGraphFile();
@@ -238,7 +234,7 @@ public class PSVGCalcService {
         
         //initialise VG Calculation
 
-        VisibilityXYDegree visXYDegree = new VisibilityXYDegree(InputTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, rejectCut, logBase,psvgResultsTermInstanceSlug);
+        VisibilityGraphXYTS visXYDegree = new VisibilityGraphXYTS(InputTimeSeries, PSVGRequiredStart, PSVGDataPartFromStart, includePSVGInterCept, maxNodesForCalc, rejectCut, logBase,psvgResultsTermInstanceSlug);
         visXYDegree.calculateVisibilityDegree();
         //close  temp VG in file.
         
