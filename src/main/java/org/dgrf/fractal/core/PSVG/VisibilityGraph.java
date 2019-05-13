@@ -57,8 +57,27 @@ abstract class VisibilityGraph {
         this.PSVG_RESULTS_TERM_INSTANCE_SLUG = psvgResultsTermInstanceSlug;
 
     }
-    abstract void createVGEdges();
-    abstract Boolean checkVisibility(int currentNodeIndex, int nodeToCompareIndex);
+     protected void createVGEdges() {
+        int totalNodes = InputTimeSeries.size();
+        int maxNodesForCalc = MAX_NODES_FOR_CALC;
+        if (InputTimeSeries.size() < MAX_NODES_FOR_CALC) {
+            maxNodesForCalc = InputTimeSeries.size();
+        }
+
+        for (int nodeGap = 1; nodeGap < maxNodesForCalc; nodeGap++) {
+            for (int currentNodeIndex = 0; currentNodeIndex < (totalNodes - nodeGap); currentNodeIndex++) {
+                int nodeToCompareIndex = currentNodeIndex + nodeGap;
+
+                Vgadjacency vgadjacency = checkVisibility(currentNodeIndex, nodeToCompareIndex);
+                if (vgadjacency != null) {
+                    //PSVGGraphStore.storeVisibilityGraphInFile(currentNodeIndex, nodeToCompareIndex);
+                    insertNewEdge(vgadjacency);
+                }
+
+            }
+        }
+    }
+    abstract Vgadjacency checkVisibility(int currentNodeIndex, int nodeToCompareIndex);
     public void calculateVisibilityDegree() {
 
         //PSVGGraphStore.psvgresultsslug = PSVG_RESULTS_TERM_INSTANCE_SLUG;
@@ -201,7 +220,7 @@ abstract class VisibilityGraph {
         }).sorted(Comparator.comparing(m -> m.getDegValue())).collect(Collectors.toList());
 
     }
-    protected Vgadjacency createEdge(int currentNodeIndex, int nodeToCompareIndex, Double currentNodeXVal,Double currentNodeYVal,Double nodeToCompareXVal,Double nodeToCompareYVal ) {
+    protected Vgadjacency gatherEdgeDetails(int currentNodeIndex, int nodeToCompareIndex, Double currentNodeXVal,Double currentNodeYVal,Double nodeToCompareXVal,Double nodeToCompareYVal ) {
         Vgadjacency vgadjacency = new Vgadjacency(PSVG_RESULTS_TERM_INSTANCE_SLUG, currentNodeIndex, nodeToCompareIndex);
         Double baseOfTriangle = nodeToCompareXVal -currentNodeXVal;
         Double heightOfTriangle = nodeToCompareYVal -currentNodeYVal;
