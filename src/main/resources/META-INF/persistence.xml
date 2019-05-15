@@ -14,6 +14,7 @@
     <class>org.dgrf.fractal.db.entities.Psvgresults</class>
     <class>org.dgrf.fractal.db.entities.Mfdfaresults</class>
     <class>org.dgrf.fractal.db.entities.Ipsvgresults</class>
+    <class>org.dgrf.fractal.db.entities.Edgelist</class>
     <shared-cache-mode>NONE</shared-cache-mode>
     <mapping-file>META-INF/dataseriesorm.xml</mapping-file>
     <mapping-file>META-INF/psvgorm.xml</mapping-file>
