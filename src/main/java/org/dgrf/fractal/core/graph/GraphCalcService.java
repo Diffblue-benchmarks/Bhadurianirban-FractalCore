@@ -56,4 +56,23 @@ public class GraphCalcService {
         fractalDTO.setResponseCode(FractalResponseCode.SUCCESS);
         return fractalDTO;
     }
+    public FractalDTO deleteGraph (FractalDTO fractalDTO) {
+        Map<String,Object> graphTermInstance = fractalDTO.getFractalTermInstance();
+        String graphTermInstanceSlug = (String)graphTermInstance.get(CMSConstants.TERM_INSTANCE_SLUG);
+        CMSClientService cmscs = new CMSClientService();
+        
+        TermInstanceDTO termInstanceDTO = new TermInstanceDTO();
+        termInstanceDTO.setAuthCredentials(fractalDTO.getAuthCredentials());
+        termInstanceDTO.setTermSlug(FractalConstants.TERM_SLUG_GRAPH);
+        termInstanceDTO.setTermInstanceSlug(graphTermInstanceSlug);
+        termInstanceDTO.setTermInstance(graphTermInstance);
+        
+        termInstanceDTO = cmscs.deleteTermInstance(termInstanceDTO);
+        if (termInstanceDTO.getResponseCode() != FractalResponseCode.SUCCESS) {
+            fractalDTO.setResponseCode(termInstanceDTO.getResponseCode());
+            return fractalDTO;
+        }
+        
+        return fractalDTO;
+    }
 }

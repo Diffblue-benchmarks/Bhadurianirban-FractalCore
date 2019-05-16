@@ -20,5 +20,6 @@
     <mapping-file>META-INF/psvgorm.xml</mapping-file>
     <mapping-file>META-INF/ipsvgorm.xml</mapping-file>
     <mapping-file>META-INF/mfdfaorm.xml</mapping-file>
+    <mapping-file>META-INF/graphorm.xml</mapping-file>
   </persistence-unit>
 </persistence>

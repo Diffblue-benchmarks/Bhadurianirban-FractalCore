@@ -50,5 +50,20 @@ public class EdgeListDAO extends EdgelistJpaController {
         return response;
 
     }
-
+    public int deleteEdgeList(String graphTermInstanceSlug) {
+        int response;
+        EntityManager em = getEntityManager();
+        EntityTransaction entr = em.getTransaction();
+        Query query = em.createNamedQuery("Edgelist.deleteBySlug");
+        query.setParameter("graphTermInstanceSlug", graphTermInstanceSlug);
+        entr.begin();
+        int executeUpdate = query.executeUpdate();
+        if (executeUpdate == 0) {
+            response = FractalResponseCode.DB_NON_EXISTING;
+        } else {
+            response = FractalResponseCode.SUCCESS;
+        }
+        entr.commit();
+        return response;
+    }
 }
