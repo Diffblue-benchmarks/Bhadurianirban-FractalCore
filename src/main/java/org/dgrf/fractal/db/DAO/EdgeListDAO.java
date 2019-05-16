@@ -25,10 +25,35 @@ public class EdgeListDAO extends EdgelistJpaController {
         super(emf);
     }
 
-    public int importVGGraphEdgeList(String psvgResultsTermInstanceSlug, String graphTermInstanceSlug) {
+    public int importVGGraphEdgeListReal(String psvgResultsTermInstanceSlug, String graphTermInstanceSlug) {
 
         String nativeQueryString = "insert into edgelist (graphslug, node, adjnode, edgelength) \n"
                 + "select ?1, node, adjnode, realedgelength from vgadjacency where\n"
+                + "psvgresultsslug = ?2";
+
+        EntityManager em = getEntityManager();
+
+        EntityTransaction entr = em.getTransaction();
+        Query query = em.createNativeQuery(nativeQueryString);
+        query.setParameter(1, graphTermInstanceSlug);
+        query.setParameter(2, psvgResultsTermInstanceSlug);
+        entr.begin();
+        int executeUpdate = query.executeUpdate();
+        entr.commit();
+        int response;
+        if (executeUpdate == 0) {
+            response = FractalResponseCode.DB_NON_EXISTING;
+        } else {
+            response = FractalResponseCode.SUCCESS;
+        }
+
+        return response;
+
+    }
+    public int importVGGraphEdgeListHorizontal(String psvgResultsTermInstanceSlug, String graphTermInstanceSlug) {
+
+        String nativeQueryString = "insert into edgelist (graphslug, node, adjnode, edgelength) \n"
+                + "select ?1, node, adjnode, hedgelength from vgadjacency where\n"
                 + "psvgresultsslug = ?2";
 
         EntityManager em = getEntityManager();
