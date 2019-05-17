@@ -22,31 +22,37 @@ import org.dgrf.fractal.response.FractalResponseCode;
 public class GraphCalcService {
 
     public FractalDTO importPSVGGraph(FractalDTO fractalDTO) {
-        String importFromVGSlug = fractalDTO.getImportFromVGInstanceSlug();
+        
         Map<String, Object> graphTermInstance = fractalDTO.getFractalTermInstance();
         String edgeLengthType = (String) graphTermInstance.get("edgeLengthTypeForImport");
-
+        String importFromVGSlug = (String) graphTermInstance.get("importFromVGInstanceSlug");
+        
         //generate graph terminstance slug for import 
         String graphTermInstanceSlug = importFromVGSlug.replace(FractalConstants.TERM_INSTANCE_SLUG_PSVG_EXT, FractalConstants.TERM_INSTANCE_SLUG_GRAPH_IMP_EXT);
         //copy graph data from VG
+        EdgeListDAO edgeListDAO = new EdgeListDAO(DatabaseConnection.EMF);
+        
+        int response = edgeListDAO.deleteEdgeList(graphTermInstanceSlug);
+        
+        
         if (edgeLengthType.equals("real")) {
-            EdgeListDAO edgeListDAO = new EdgeListDAO(DatabaseConnection.EMF);
-            int response = edgeListDAO.importVGGraphEdgeListReal(importFromVGSlug, graphTermInstanceSlug);
+            response = edgeListDAO.importVGGraphEdgeListReal(importFromVGSlug, graphTermInstanceSlug);
             if (response != FractalResponseCode.SUCCESS) {
                 fractalDTO.setResponseCode(FractalResponseCode.DB_SEVERE);
                 return fractalDTO;
             }
         } else {
-            EdgeListDAO edgeListDAO = new EdgeListDAO(DatabaseConnection.EMF);
-            int response = edgeListDAO.importVGGraphEdgeListHorizontal(importFromVGSlug, graphTermInstanceSlug);
+            response = edgeListDAO.importVGGraphEdgeListHorizontal(importFromVGSlug, graphTermInstanceSlug);
             if (response != FractalResponseCode.SUCCESS) {
                 fractalDTO.setResponseCode(FractalResponseCode.DB_SEVERE);
                 return fractalDTO;
             }
         }
-        //we do not need the edge length type any more.
+        //we do not need the edge length type of the visibility graph any more.
+        // and also from where it is imported.
         
         graphTermInstance.remove("edgeLengthTypeForImport");
+        graphTermInstance.remove("importFromVGInstanceSlug");
         
         CMSClientService cmscs = new CMSClientService();
 
@@ -89,9 +95,10 @@ public class GraphCalcService {
         EdgeListDAO edgeListDAO = new EdgeListDAO(DatabaseConnection.EMF);
         int response = edgeListDAO.deleteEdgeList(graphTermInstanceSlug);
         if (response != FractalResponseCode.SUCCESS) {
-            fractalDTO.setResponseCode(termInstanceDTO.getResponseCode());
+            fractalDTO.setResponseCode(response);
             return fractalDTO;
         }
+        fractalDTO.setResponseCode(FractalResponseCode.SUCCESS);
         return fractalDTO;
     }
 }
