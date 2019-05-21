@@ -101,4 +101,10 @@ public class GraphCalcService {
         fractalDTO.setResponseCode(FractalResponseCode.SUCCESS);
         return fractalDTO;
     }
+    
+    public FractalDTO calculateNetworkStats (FractalDTO fractalDTO) {
+        System.out.println("Gheu gheu");
+        fractalDTO.setResponseCode(FractalResponseCode.SUCCESS);
+        return fractalDTO;
+    }
 }
