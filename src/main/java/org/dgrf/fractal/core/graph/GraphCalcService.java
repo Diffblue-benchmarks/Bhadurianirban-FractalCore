@@ -14,6 +14,7 @@ import org.dgrf.fractal.core.dto.FractalDTO;
 import org.dgrf.fractal.core.util.DatabaseConnection;
 import org.dgrf.fractal.db.DAO.EdgeListDAO;
 import org.dgrf.fractal.response.FractalResponseCode;
+import org.dgrf.fractal.termmeta.NetworkStatsMeta;
 
 /**
  *
@@ -104,6 +105,32 @@ public class GraphCalcService {
     
     public FractalDTO calculateNetworkStats (FractalDTO fractalDTO) {
         System.out.println("Gheu gheu");
+        Map<String,Object> networkStatsTermInstance = fractalDTO.getFractalTermInstance();
+        String graphTermInstanceSlug  = (String)networkStatsTermInstance.get(NetworkStatsMeta.GRAPH);
+        String networkCalculationType = (String)networkStatsTermInstance.get("calctype");
+        String networkStatsTermInstanceSlug =  graphTermInstanceSlug.replaceAll(FractalConstants.TERM_INSTANCE_SLUG_GRAPH_IMP_EXT,FractalConstants.TERM_INSTANCE_SLUG_NETWORK_STATS_EXT);
+        System.out.println(networkStatsTermInstanceSlug+" "+networkCalculationType);
+        
+        CMSClientService cmscs = new CMSClientService();
+
+        networkStatsTermInstance.put(CMSConstants.TERM_SLUG, FractalConstants.TERM_SLUG_NETWORK_STATS);
+        networkStatsTermInstance.put(CMSConstants.TERM_INSTANCE_SLUG, networkStatsTermInstanceSlug);
+        networkStatsTermInstance.put(NetworkStatsMeta.AVERAGE_CLUSTERING_COEFF, "0.5");
+        networkStatsTermInstance.remove("calctype");
+        
+        TermInstanceDTO termInstanceDTO = new TermInstanceDTO();
+        termInstanceDTO.setAuthCredentials(fractalDTO.getAuthCredentials());
+        termInstanceDTO.setTermSlug(FractalConstants.TERM_SLUG_NETWORK_STATS);
+        termInstanceDTO.setTermInstanceSlug(networkStatsTermInstanceSlug);
+        termInstanceDTO.setTermInstance(networkStatsTermInstance);
+
+        termInstanceDTO = cmscs.saveTermInstance(termInstanceDTO);
+        if (termInstanceDTO.getResponseCode() != FractalResponseCode.SUCCESS) {
+            fractalDTO.setResponseCode(termInstanceDTO.getResponseCode());
+            return fractalDTO;
+        }
+
+        fractalDTO.setFractalTermInstance(networkStatsTermInstance);
         fractalDTO.setResponseCode(FractalResponseCode.SUCCESS);
         return fractalDTO;
     }
