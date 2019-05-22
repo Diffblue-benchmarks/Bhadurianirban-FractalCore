@@ -112,16 +112,37 @@ public class GraphCalcService {
         System.out.println(networkStatsTermInstanceSlug+" "+networkCalculationType);
         
         CMSClientService cmscs = new CMSClientService();
-
-        networkStatsTermInstance.put(CMSConstants.TERM_SLUG, FractalConstants.TERM_SLUG_NETWORK_STATS);
-        networkStatsTermInstance.put(CMSConstants.TERM_INSTANCE_SLUG, networkStatsTermInstanceSlug);
-        networkStatsTermInstance.put(NetworkStatsMeta.AVERAGE_CLUSTERING_COEFF, "0.5");
-        networkStatsTermInstance.remove("calctype");
-        
+        //check if term instance is already existing
         TermInstanceDTO termInstanceDTO = new TermInstanceDTO();
         termInstanceDTO.setAuthCredentials(fractalDTO.getAuthCredentials());
         termInstanceDTO.setTermSlug(FractalConstants.TERM_SLUG_NETWORK_STATS);
         termInstanceDTO.setTermInstanceSlug(networkStatsTermInstanceSlug);
+        termInstanceDTO = cmscs.getTermInstance(termInstanceDTO);
+        
+        if (termInstanceDTO.getResponseCode()== FractalResponseCode.SUCCESS) {
+            Map<String,Object> existingNetworkStatsTermInstance = termInstanceDTO.getTermInstance();
+            if (existingNetworkStatsTermInstance.get(NetworkStatsMeta.AVERAGE_CLUSTERING_COEFF)!= null) {
+                networkStatsTermInstance.put(NetworkStatsMeta.AVERAGE_CLUSTERING_COEFF,existingNetworkStatsTermInstance.get(NetworkStatsMeta.AVERAGE_CLUSTERING_COEFF));
+            } 
+            if (existingNetworkStatsTermInstance.get(NetworkStatsMeta.HETEROGENEITY)!= null) {
+                networkStatsTermInstance.put(NetworkStatsMeta.HETEROGENEITY,existingNetworkStatsTermInstance.get(NetworkStatsMeta.HETEROGENEITY));
+            }
+            
+        }
+         
+
+        networkStatsTermInstance.put(CMSConstants.TERM_SLUG, FractalConstants.TERM_SLUG_NETWORK_STATS);
+        networkStatsTermInstance.put(CMSConstants.TERM_INSTANCE_SLUG, networkStatsTermInstanceSlug);
+        if (networkCalculationType.equals(NetworkStatsMeta.AVERAGE_CLUSTERING_COEFF)) {
+            networkStatsTermInstance.put(NetworkStatsMeta.AVERAGE_CLUSTERING_COEFF, "0.5");
+        } else if (networkCalculationType.equals(NetworkStatsMeta.HETEROGENEITY)) {
+            networkStatsTermInstance.put(NetworkStatsMeta.HETEROGENEITY, "0.6");
+        } 
+        
+        networkStatsTermInstance.remove("calctype");
+        
+        
+        
         termInstanceDTO.setTermInstance(networkStatsTermInstance);
 
         termInstanceDTO = cmscs.saveTermInstance(termInstanceDTO);
@@ -131,6 +152,27 @@ public class GraphCalcService {
         }
 
         fractalDTO.setFractalTermInstance(networkStatsTermInstance);
+        fractalDTO.setResponseCode(FractalResponseCode.SUCCESS);
+        return fractalDTO;
+    }
+    public FractalDTO deleteNetworkStats (FractalDTO fractalDTO) {
+        Map<String,Object> networkStatsTermInstance = fractalDTO.getFractalTermInstance();
+        
+        String networkStatsTermInstanceSlug = (String) networkStatsTermInstance.get(CMSConstants.TERM_INSTANCE_SLUG);
+        String networkStatsTermSlug = (String) networkStatsTermInstance.get(CMSConstants.TERM_SLUG);
+        
+        TermInstanceDTO termInstanceDTO = new TermInstanceDTO();
+        termInstanceDTO.setAuthCredentials(fractalDTO.getAuthCredentials());
+        termInstanceDTO.setTermSlug(networkStatsTermSlug);
+        termInstanceDTO.setTermInstanceSlug(networkStatsTermInstanceSlug);
+        
+        CMSClientService cmscs = new CMSClientService();
+        termInstanceDTO = cmscs.deleteTermInstance(termInstanceDTO);
+        
+        if (termInstanceDTO.getResponseCode() != FractalResponseCode.SUCCESS) {
+            fractalDTO.setResponseCode(termInstanceDTO.getResponseCode());
+            return fractalDTO;
+        }
         fractalDTO.setResponseCode(FractalResponseCode.SUCCESS);
         return fractalDTO;
     }
