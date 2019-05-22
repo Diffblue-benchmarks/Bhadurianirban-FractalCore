@@ -176,4 +176,10 @@ public class GraphCalcService {
         fractalDTO.setResponseCode(FractalResponseCode.SUCCESS);
         return fractalDTO;
     }
+    
+    public FractalDTO uploadGraph(FractalDTO fractalDTO) {
+        System.out.println("Gheuuuu");
+        fractalDTO.setResponseCode(FractalResponseCode.SUCCESS);
+        return fractalDTO;
+    }
 }
